@@ -1,0 +1,329 @@
+{% extends "_base.html" %}
+{% block title %}Ch {{ "%02d" % chapter.id }} · {{ chapter.title }}{% endblock %}
+
+{% block main %}
+<!-- Chapter header (replaces default top padding/breadcrumb area) -->
+<div class="chapter-header">
+  <div class="phase-tag">{{ phase_label[chapter.phase] }}</div>
+  <div class="sep"></div>
+  <div class="ch-num">Ch {{ "%02d" % chapter.id }}</div>
+  <div class="sep"></div>
+  <div class="title">{{ chapter.title }}</div>
+  <div class="page-count">{{ "%02d" % (page_index + 1) }} / {{ "%02d" % chapter.pages|length }}</div>
+  <button class="btn btn-secondary" onclick="window.location='/chapters'">Close</button>
+</div>
+<div class="chapter-progress">
+  <div class="fill" style="width: {{ ((page_index + 1) / chapter.pages|length * 100) | round(1) }}%;"></div>
+</div>
+
+<!-- Page body — varies by kind -->
+{% if kind == "sample" %}
+  <div class="page-pane" id="page-body">
+    <div class="kicker">Sample</div>
+    <h2 class="h1 mt-2">{{ page.title }}</h2>
+    <div class="rule-accent"></div>
+    <div class="md">{{ ctx.markdown_html | safe }}</div>
+
+    {% if ctx.sample_code %}
+    <div class="code-card mt-6">
+      <div class="file-row" style="justify-content: space-between;">
+        <div class="row"><span class="dot"></span><span>sample.py</span></div>
+        {% if ctx.runnable %}
+        <button class="btn btn-primary" id="run-btn" onclick="runSample()">▷ {% if ctx.runner == 'streamlit' %}Launch Streamlit{% else %}Run{% endif %}</button>
+        {% endif %}
+      </div>
+      <pre class="body"><code id="sample-code">{{ ctx.sample_code }}</code></pre>
+    </div>
+    <div class="output mt-4" id="output">(実行結果がここに表示されます)</div>
+    {% endif %}
+  </div>
+
+{% elif kind == "exercise" %}
+  <div class="page-pane split" id="page-body">
+    <div class="left">
+      <div class="kicker">Exercise</div>
+      <h2 class="h1 mt-2">{{ page.title }}</h2>
+      <div class="rule-accent"></div>
+      <div class="md">{{ ctx.prompt_html | safe }}</div>
+      {% if ctx.hints %}
+      <button class="btn btn-secondary mt-4" onclick="toggleHint()">💡 ヒント</button>
+      <div id="hint-box" class="output mt-4 hidden" style="border-left: 3px solid var(--accent);">
+      </div>
+      {% endif %}
+    </div>
+    <div class="right">
+      <div class="code-card">
+        <div class="file-row" style="justify-content: space-between;">
+          <div class="row"><span class="dot"></span><span>exercise.py</span></div>
+          <button class="btn btn-secondary" onclick="resetBlanks()" style="padding: 5px 14px; font-size: 11px;">Reset</button>
+        </div>
+        <pre class="body" id="code-template">{{ ctx.code_html | safe }}</pre>
+      </div>
+      <div class="output" id="output">$ python exercise.py
+&gt; (空欄を埋めて Submit を押してください)</div>
+    </div>
+  </div>
+
+{% elif kind == "reading" %}
+  <div class="page-pane" id="page-body">
+    <div class="kicker">Reading</div>
+    <h2 class="h1 mt-2">{{ page.title }}</h2>
+    <div class="rule-accent"></div>
+    <div class="md">{{ ctx.prompt_html | safe }}</div>
+
+    <div class="code-card mt-6">
+      <div class="file-row"><span class="dot"></span><span>{{ ctx.code_file_label }}</span></div>
+      <pre class="body"><code>{{ ctx.code }}</code></pre>
+    </div>
+
+    <h3 class="h3 mt-6" style="color: var(--ink-3);">Question</h3>
+    <div class="choices mt-2" id="choices">
+      {% for choice in ctx.choices %}
+      <label data-index="{{ loop.index0 }}">
+        <span class="marker"></span>
+        <span>{{ choice }}</span>
+        <input type="radio" name="choice" value="{{ loop.index0 }}" />
+      </label>
+      {% endfor %}
+    </div>
+    <div id="empty-notice" class="output mt-4 hidden"
+         style="border-left: 3px solid var(--accent);">
+      選択肢を 1 つ選んでから提出してください。
+    </div>
+  </div>
+{% endif %}
+
+<!-- Result overlay (hidden by default; shown after Submit) -->
+<div class="page-pane hidden" id="result-pane">
+  <div class="result-pane">
+    <div class="kicker" id="result-kicker">Submitted</div>
+    <div class="result-verdict mt-4" id="result-verdict">—</div>
+    <div class="result-rule"></div>
+    <div class="md mt-4" id="result-message">—</div>
+
+    <div class="code-card mt-6" id="result-code-card" style="display: none;">
+      <div class="file-row"><span class="dot"></span><span>submitted.py</span></div>
+      <pre class="body"><code id="result-code"></code></pre>
+    </div>
+    <div class="output mt-4" id="result-output" style="display: none;"></div>
+
+    <div class="row mt-6">
+      <button class="btn btn-primary" id="result-next-btn" onclick="goNext()">次へ →</button>
+      <button class="btn btn-secondary" id="result-retry-btn" onclick="retry()" style="display: none;">もう一度</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mentor strip -->
+<div class="mentor-strip">
+  <div class="label">Mentor</div>
+  <img class="dog" id="dog-img" src="/static/img/{{ mood }}.png" alt="" />
+  <div class="bubble" id="mentor-bubble">{{ speech or "—" }}</div>
+  <div class="live"></div>
+</div>
+
+<!-- Footer buttons -->
+<div class="chapter-footer">
+  <button class="btn btn-secondary" {% if page_index == 0 %}disabled{% endif %}
+          onclick="goPrev()">← Back</button>
+  <div class="spacer"></div>
+  {% if kind == "sample" %}
+    <button class="btn btn-primary" onclick="goNext()">
+      {% if is_last %}章を完了{% else %}Next →{% endif %}
+    </button>
+  {% else %}
+    <button class="btn btn-primary" onclick="submitAnswer()">Submit</button>
+  {% endif %}
+</div>
+{# The status bar at the bottom is rendered by _base.html (outside of block main). #}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const CHAPTER_ID = {{ chapter.id }};
+  const PAGE_INDEX = {{ page_index }};
+  const PAGES_TOTAL = {{ chapter.pages|length }};
+  const KIND = "{{ kind }}";
+  const IS_LAST = {{ "true" if is_last else "false" }};
+  const HINTS = {{ ctx.hints|tojson if kind == "exercise" else "[]" }};
+
+  // ----- Navigation -----
+  function goPrev() {
+    if (PAGE_INDEX > 0) {
+      window.location = `/chapter/${CHAPTER_ID}?page=${PAGE_INDEX - 1}`;
+    }
+  }
+  function goNext() {
+    if (PAGE_INDEX + 1 < PAGES_TOTAL) {
+      window.location = `/chapter/${CHAPTER_ID}?page=${PAGE_INDEX + 1}`;
+    } else {
+      // Mark completed and return to chapter picker.
+      fetch(`/api/progress/${CHAPTER_ID}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({"last_page_index": PAGE_INDEX, "completed": true})
+      }).finally(() => { window.location = "/chapters"; });
+    }
+  }
+
+  // ----- Sample page: Run -----
+  async function runSample() {
+    const btn = document.getElementById("run-btn");
+    const out = document.getElementById("output");
+    if (!btn || !out) return;
+    btn.disabled = true; out.textContent = "(実行中…)";
+    try {
+      const code = document.getElementById("sample-code").textContent;
+      const r = await fetch("/api/run", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({code})
+      });
+      const data = await r.json();
+      let html = "";
+      if (data.stdout) html += escapeHtml(data.stdout);
+      if (data.stderr) html += `<span class="err">${escapeHtml(data.stderr)}</span>`;
+      if (data.error_value) html += `<span class="err">${escapeHtml(data.error_name + ": " + data.error_value)}</span>`;
+      out.innerHTML = html || "(出力なし)";
+      setMood(data.status === "ok" ? "happy" : "sad",
+              data.status === "ok" ? "実行できたね。次へ進もう。"
+                                    : "エラーが出たみたい。出力を確認しよう。");
+    } catch (e) {
+      out.textContent = "実行に失敗しました: " + e;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ----- Exercise: hint toggle + blank reset -----
+  let hintIndex = 0;
+  function toggleHint() {
+    const box = document.getElementById("hint-box");
+    if (!box) return;
+    if (HINTS.length === 0) {
+      box.textContent = "（この問題にヒントは用意されていません）";
+    } else {
+      const text = HINTS[Math.min(hintIndex, HINTS.length - 1)];
+      box.innerHTML = `<strong>HINT ${hintIndex + 1}</strong>&nbsp;&nbsp;${escapeHtml(text)}`;
+      if (hintIndex < HINTS.length - 1) hintIndex += 1;
+    }
+    box.classList.remove("hidden");
+  }
+  function resetBlanks() {
+    document.querySelectorAll(".blank").forEach(el => {
+      el.value = ""; el.classList.remove("ok","ng","partial");
+    });
+  }
+
+  // ----- Submit (exercise / reading) -----
+  async function submitAnswer() {
+    const body = {chapter_id: CHAPTER_ID, page_index: PAGE_INDEX};
+    if (KIND === "exercise") {
+      body.values = {};
+      document.querySelectorAll(".blank").forEach(el => {
+        body.values[el.dataset.slot] = el.value;
+      });
+    } else if (KIND === "reading") {
+      const checked = document.querySelector('input[name="choice"]:checked');
+      if (!checked) {
+        document.getElementById("empty-notice").classList.remove("hidden");
+        return;
+      }
+      body.selected_index = parseInt(checked.value, 10);
+    }
+    const r = await fetch("/api/grade", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    showResult(data);
+  }
+
+  function showResult(data) {
+    document.getElementById("page-body").classList.add("hidden");
+    const overlay = document.getElementById("result-pane");
+    overlay.classList.remove("hidden");
+
+    const verdict = document.getElementById("result-verdict");
+    const message = document.getElementById("result-message");
+    const codeCard = document.getElementById("result-code-card");
+    const codeEl   = document.getElementById("result-code");
+    const outEl    = document.getElementById("result-output");
+    const nextBtn  = document.getElementById("result-next-btn");
+    const retryBtn = document.getElementById("result-retry-btn");
+
+    if (data.overall_passed) {
+      verdict.textContent = "Correct";
+      verdict.classList.add("pass"); verdict.classList.remove("fail");
+      message.innerHTML = "<p>正解！</p>";
+      setMood("happy", "正解！次へ進もう。");
+      retryBtn.style.display = "none";
+    } else {
+      verdict.textContent = "Incorrect";
+      verdict.classList.add("fail"); verdict.classList.remove("pass");
+      const detail = (data.test_results || [])
+        .map(t => escapeHtml(t.detail)).join("<br/>");
+      message.innerHTML = `<p>もう一度トライ。</p><p class="muted">${detail}</p>`;
+      setMood("sad", "ヒントを使って再挑戦しよう。");
+      retryBtn.style.display = "";
+    }
+    if (data.assembled_code) {
+      codeCard.style.display = "";
+      codeEl.textContent = data.assembled_code;
+    }
+    if (data.execution && (data.execution.stdout || data.execution.stderr)) {
+      outEl.style.display = "";
+      let html = "";
+      if (data.execution.stdout) html += escapeHtml(data.execution.stdout);
+      if (data.execution.stderr) html += `<span class="err">${escapeHtml(data.execution.stderr)}</span>`;
+      outEl.innerHTML = html;
+    }
+
+    // Mark blanks visually
+    if (data.failed_blanks && KIND === "exercise") {
+      const failed = new Set(data.failed_blanks);
+      document.querySelectorAll(".blank").forEach(el => {
+        el.classList.toggle("ng", failed.has(el.dataset.slot));
+        el.classList.toggle("ok", !failed.has(el.dataset.slot) && data.overall_passed);
+      });
+    }
+  }
+
+  function retry() {
+    document.getElementById("page-body").classList.remove("hidden");
+    document.getElementById("result-pane").classList.add("hidden");
+  }
+
+  // ----- Reading: radio selection visual -----
+  document.querySelectorAll("#choices label").forEach(lbl => {
+    lbl.addEventListener("click", () => {
+      document.querySelectorAll("#choices label").forEach(l => l.classList.remove("selected"));
+      lbl.classList.add("selected");
+      lbl.querySelector("input").checked = true;
+      document.getElementById("empty-notice")?.classList.add("hidden");
+    });
+  });
+
+  // ----- Mentor (dog) state -----
+  function setMood(mood, speech) {
+    document.getElementById("dog-img").src = `/static/img/${mood}.png`;
+    if (speech) document.getElementById("mentor-bubble").textContent = speech;
+  }
+
+  function escapeHtml(s) {
+    return (s || "").toString()
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // ----- Keyboard: Enter to Submit (exercise/reading) -----
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      if (KIND === "sample") goNext();
+      else submitAnswer();
+    }
+  });
+</script>
+{% endblock %}

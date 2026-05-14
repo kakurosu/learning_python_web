@@ -1,32 +1,131 @@
 {% extends "_base.html" %}
 {% block title %}Dashboard · Study Python for Finance{% endblock %}
 {% block content %}
-  <h1>こんにちは！</h1>
-  <p class="lead">Web UI 版（pywebview + FastAPI）の最小起動テストです。サイドバーのナビは現在ダッシュボードのみ実装。</p>
 
-  <div id="chapter-summary"
-       style="border: 1px solid var(--line); padding: 16px; max-width: 720px;">
-    <strong>章サマリ</strong>
-    <div id="chapter-summary-body" style="color: var(--ink3); margin-top: 8px;">
-      読み込み中...
+<h1 class="hero">こんにちは！</h1>
+{% if latest_ch %}
+  <p class="sub mt-2">
+    前回の続きから、{{ phase_label[latest_ch.phase] }} · Ch {{ "%02d" % latest_ch.id }}
+    「{{ latest_ch.title }}」を再開できます。
+  </p>
+{% else %}
+  <p class="sub mt-2">章を選んで学習を始めましょう。</p>
+{% endif %}
+<div class="rule-accent"></div>
+
+<!-- Continue card -->
+<div class="continue-card" onclick="
+    {% if latest_ch %}window.location='/chapter/{{ latest_ch.id }}?page={{ latest_page }}'
+    {% else %}window.location='/chapters'{% endif %}">
+  <div>
+    <div class="kicker-row">
+      <span class="dot"></span>
+      <span class="accent">続きから</span>
+      <span class="sep">·</span>
+      {% if latest_ch %}
+        <span class="gray">{{ phase_label[latest_ch.phase] }}</span>
+        <span class="sep">·</span>
+        <span class="gray">Ch {{ "%02d" % latest_ch.id }}</span>
+      {% else %}
+        <span class="gray">はじめての学習</span>
+      {% endif %}
+    </div>
+    <div class="ttl">{{ latest_ch.title if latest_ch else "Begin Your Journey" }}</div>
+    <div class="goal">
+      {% if latest_ch and latest_ch.learning_goals %}{{ latest_ch.learning_goals[0] }}
+      {% else %}第 1 章から学習を始めましょう。{% endif %}
+    </div>
+    <div class="cta-row">
+      <button class="btn btn-primary"
+              onclick="event.stopPropagation();
+                       {% if latest_ch %}window.location='/chapter/{{ latest_ch.id }}?page={{ latest_page }}'
+                       {% else %}window.location='/chapter/1'{% endif %}">
+        ▷ 再開する
+      </button>
+      {% if latest_ch %}
+        <div class="meta">ページ {{ latest_page + 1 }}/{{ latest_ch.pages|length }}</div>
+      {% endif %}
     </div>
   </div>
 
-  <script>
-    fetch("/api/chapters")
-      .then(r => r.json())
-      .then(data => {
-        const body = document.getElementById("chapter-summary-body");
-        const done = data.filter(c => c.status === "completed").length;
-        const inprog = data.filter(c => c.status === "in_progress").length;
-        const phases = new Set(data.map(c => c.phase));
-        body.innerHTML =
-          `${data.length} 章 / ${phases.size} Phase ` +
-          `(完了 ${done} · 進行中 ${inprog})`;
-      })
-      .catch(err => {
-        document.getElementById("chapter-summary-body").innerText =
-          "API 呼び出しに失敗: " + err;
-      });
-  </script>
+  {% if latest_ch %}
+  <div class="code-card">
+    <div class="file-row"><span class="dot"></span><span>preview.py</span></div>
+    <pre class="body"><span class="ln">1</span><span class="tok-com"># フルーツを順に表示する</span>
+<span class="ln">2</span><span class="tok-kw">for</span> fruit <span class="tok-kw">in</span> [<span class="tok-str">"apple"</span>, <span class="tok-str">"banana"</span>, <span class="tok-str">"cherry"</span>]:
+<span class="ln">3</span>    <span class="tok-fn">print</span>(fruit)</pre>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Two columns: phase progress + side rail -->
+<div class="grid-2 mt-8">
+
+  <!-- Left: Phase progress -->
+  <div class="card">
+    <div class="card-section-title">
+      <div class="h3">フェーズ別の進捗</div>
+    </div>
+    {% for row in phase_rows %}
+    <div class="phase-row">
+      <div class="badge">{{ row.phase }}</div>
+      <div>
+        <div class="title">{{ row.title }}</div>
+        <div class="sub">{{ row.done }}/{{ row.total }} 章</div>
+      </div>
+      <div class="track"><div class="fill" style="width: {{ row.pct }}%"></div></div>
+      <div class="pct">{{ row.pct }}%</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Right: stats + quick actions -->
+  <div class="col gap-y-4">
+    <div class="card">
+      <div class="card-section-title">
+        <div class="h3">今週の様子</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="val">{{ n_total }}</div>  <div class="lab">総章数</div></div>
+        <div class="stat"><div class="val">{{ n_done }}</div>   <div class="lab">完了した章</div></div>
+        <div class="stat"><div class="val">{{ n_inprog }}</div> <div class="lab">進行中の章</div></div>
+        <div class="stat">
+          <div class="val">{% if avg_score is not none %}{{ avg_score }}%{% else %}—{% endif %}</div>
+          <div class="lab accent">テスト平均点</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-section-title">
+        <div class="h3">クイックアクション</div>
+      </div>
+      <div class="qa-row" onclick="window.location='/chapters'">
+        <div class="qa-icon">□</div>
+        <div>
+          <div class="qa-title">章を選ぶ</div>
+          <div class="qa-sub">Phase A〜F の好きな章へ移動</div>
+        </div>
+        <div class="qa-arrow">→</div>
+      </div>
+      <div class="qa-row" onclick="window.location='/tests'">
+        <div class="qa-icon">✓</div>
+        <div>
+          <div class="qa-title">実力テスト</div>
+          <div class="qa-sub">Phase ごとに 10 問で習熟度を測る</div>
+        </div>
+        <div class="qa-arrow">→</div>
+      </div>
+      <div class="qa-row" onclick="window.location='/history'">
+        <div class="qa-icon">≡</div>
+        <div>
+          <div class="qa-title">学習履歴</div>
+          <div class="qa-sub">過去のスコアと推移を見る</div>
+        </div>
+        <div class="qa-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

@@ -26,6 +26,9 @@ dependencies = [
     "openai>=1.40",
     "python-dotenv>=1.0",
 
+    # Markdown → HTML (chapter narratives) — pure-python, pip-only.
+    "markdown>=3.6",
+
     # Numerical / financial libs used by the chapters themselves
     "numpy>=1.26",
     "pandas>=2.2",

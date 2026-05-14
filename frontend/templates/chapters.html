@@ -1,41 +1,104 @@
 {% extends "_base.html" %}
 {% block title %}Chapters · Study Python for Finance{% endblock %}
 {% block content %}
-  <h1>章を選ぶ</h1>
-  <p class="lead">全章一覧。クリックで開く（次フェーズで章ビュー実装）。</p>
 
-  <div id="chapter-list" style="display: grid; gap: 10px; max-width: 920px;">読み込み中...</div>
+<!-- Top counter strip -->
+<div class="counter-strip">
+  <div><span class="label">進行中</span><span class="num accent">{{ n_inprog }}</span></div>
+  <div><span class="label">完了</span><span class="num success">{{ n_done }}</span></div>
+  <div><span class="label">残り</span><span class="num muted">{{ n_remain }}</span></div>
+</div>
 
-  <script>
-    fetch("/api/chapters")
-      .then(r => r.json())
-      .then(data => {
-        const list = document.getElementById("chapter-list");
-        list.innerHTML = "";
-        for (const ch of data) {
-          const row = document.createElement("div");
-          row.style.cssText =
-            "border-bottom: 1px solid var(--line); padding: 12px 4px;" +
-            " display: grid; grid-template-columns: 32px 1fr 120px 110px;" +
-            " gap: 14px; align-items: center; font-size: 14px;";
-          const status = {
-            completed: "● Done",
-            in_progress: "● In progress",
-            not_started: "○ Not started",
-          }[ch.status] || "—";
-          const statusColor = {
-            completed: "var(--success)",
-            in_progress: "var(--accent)",
-            not_started: "var(--ink4)",
-          }[ch.status] || "var(--ink4)";
-          row.innerHTML =
-            `<div style="color: var(--ink4); font-family: 'JetBrains Mono', monospace;">${String(ch.id).padStart(2,'0')}</div>` +
-            `<div><div style="font-weight: 700;">${ch.title}</div>` +
-            `<div style="color: var(--ink3); font-size: 12px;">${(ch.learning_goals[0]||"")}</div></div>` +
-            `<div style="color: var(--ink4); font-size: 11px;">Phase ${ch.phase}</div>` +
-            `<div style="color: ${statusColor}; font-size: 11px; font-weight: 800;">${status}</div>`;
-          list.appendChild(row);
-        }
+<h1 class="h1">章を選ぶ</h1>
+<p class="sub mt-2">
+  全 6 Phase · 32 章。気になる章から始めましょう。
+  各章にはレッスン・練習・読解チェックが含まれます。
+</p>
+
+<!-- Search + filter chips -->
+<div class="controls-row mt-6" id="controls">
+  <input type="text" class="search" id="search" placeholder="章名・トピックを検索" />
+  <div class="spacer"></div>
+  <button class="chip on" data-filter="all">All</button>
+  <button class="chip" data-filter="in_progress">In progress</button>
+  <button class="chip" data-filter="not_started">Todo</button>
+  <button class="chip" data-filter="completed">Done</button>
+</div>
+
+<!-- Phase groups -->
+<div id="phase-list">
+{% for g in groups %}
+<div class="phase-block" data-phase="{{ g.phase }}">
+  <div class="phase-header">
+    <div class="phase-letter">{{ g.phase }}</div>
+    <div>
+      <div class="kicker">{{ phase_label[g.phase] }}</div>
+      <div class="ttl">{{ g.title }}</div>
+      <div class="ttl-sub">{{ g.desc }}</div>
+    </div>
+    <div class="meta">
+      <div class="big">{{ g.total }} 章</div>
+      <div class="small">完了 {{ g.done }} · 進行中 {{ g.inprog }}</div>
+    </div>
+  </div>
+  <hr />
+  {% for r in g.rows %}
+  <div class="chapter-row" data-status="{{ r.status }}" data-text="{{ r.title }} {{ r.goal }}"
+       onclick="window.location='/chapter/{{ r.id }}'">
+    <div class="idx">{{ "%02d" % r.id }}</div>
+    <div>
+      <div class="ttl">{{ r.title }}</div>
+      <div class="goal">{{ r.goal }}</div>
+    </div>
+    <div class="track"><div class="fill" style="width: {{ r.pct }}%"></div></div>
+    <div class="status {% if r.status=='completed' %}done{% elif r.status=='in_progress' %}inprog{% else %}todo{% endif %}">
+      {% if r.status=='completed' %}● Done
+      {% elif r.status=='in_progress' %}● In progress
+      {% else %}○ Not started
+      {% endif %}
+    </div>
+    <div class="arrow">→</div>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Filter chips + search
+  const chips  = document.querySelectorAll(".chip");
+  const search = document.getElementById("search");
+  const rows   = document.querySelectorAll(".chapter-row");
+  const blocks = document.querySelectorAll(".phase-block");
+  let activeFilter = "all";
+
+  function apply() {
+    const q = (search.value || "").toLowerCase().trim();
+    blocks.forEach(b => {
+      let visibleInBlock = 0;
+      b.querySelectorAll(".chapter-row").forEach(r => {
+        const matchesFilter =
+          activeFilter === "all" || r.dataset.status === activeFilter;
+        const text = (r.dataset.text || "").toLowerCase();
+        const matchesSearch = !q || text.includes(q);
+        const show = matchesFilter && matchesSearch;
+        r.style.display = show ? "" : "none";
+        if (show) visibleInBlock += 1;
       });
-  </script>
+      b.style.display = visibleInBlock > 0 ? "" : "none";
+    });
+  }
+  chips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      chips.forEach(c => c.classList.remove("on"));
+      chip.classList.add("on");
+      activeFilter = chip.dataset.filter;
+      apply();
+    });
+  });
+  search.addEventListener("input", apply);
+</script>
 {% endblock %}

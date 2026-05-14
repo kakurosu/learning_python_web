@@ -1,0 +1,38 @@
+{% extends "_base.html" %}
+{% block title %}History · Study Python for Finance{% endblock %}
+{% block content %}
+
+<h1 class="h1">学習履歴</h1>
+<p class="sub mt-2">過去の実力テストのスコアと推移を確認できます。</p>
+<div class="rule-accent"></div>
+
+<div class="history-stats">
+  <div class="it"><div class="v">{{ attempts }}</div>      <div class="l">attempts</div></div>
+  <div class="it"><div class="v">{{ avg }}%</div>          <div class="l">avg score</div></div>
+  <div class="it"><div class="v">{{ best }}</div>          <div class="l">best</div></div>
+</div>
+
+{% if rows %}
+<div>
+  {% for r in rows %}
+  <div class="history-row">
+    <div class="score {% if r.passed %}pass{% else %}fail{% endif %}">{{ r.score }}/{{ r.total }}</div>
+    <div>
+      <div class="ttl">{{ r.test_id }}</div>
+      <div class="sub">{{ r.finished_at }}   ·   所要 {{ r.duration }}</div>
+    </div>
+    <div class="verdict {% if r.passed %}pass{% else %}fail{% endif %}">
+      {{ "Passed" if r.passed else "Failed" }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="placeholder-card">
+  <div class="kicker">Empty</div>
+  <div class="h2 mt-2">まだテスト結果はありません</div>
+  <p class="sub mt-2">サイドバーの「実力テスト」から最初の Phase をやってみましょう。</p>
+</div>
+{% endif %}
+
+{% endblock %}

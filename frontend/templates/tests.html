@@ -1,0 +1,35 @@
+{% extends "_base.html" %}
+{% block title %}Tests · Study Python for Finance{% endblock %}
+{% block content %}
+
+<div class="kicker">Tests</div>
+<h1 class="h1 mt-2">実力テスト</h1>
+<p class="sub mt-2">Phase ごとに 10 問。制限時間と合格基準が設定されています。</p>
+<div class="rule-accent"></div>
+
+{% if not tests %}
+<div class="placeholder-card">
+  <p class="sub">実力テストはまだ用意されていません。</p>
+</div>
+{% else %}
+<div class="gap-y-4">
+  {% for ts in tests %}
+  <div class="card">
+    <div class="row" style="justify-content: space-between; align-items: flex-start;">
+      <div>
+        <div class="h2">{{ ts.title }}</div>
+        <div class="muted mono mt-2">
+          Phase {{ ts.phase }} · {{ ts.questions|length }} 問 · {{ ts.time_limit_minutes }} 分 · 合格 {{ "%d"|format(ts.pass_score*100) }}%
+        </div>
+      </div>
+      <button class="btn btn-primary"
+              onclick="window.location='/test/{{ ts.id }}'">
+        テストを開始 →
+      </button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

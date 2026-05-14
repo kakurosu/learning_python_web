@@ -1,0 +1,189 @@
+{% extends "_base.html" %}
+{% block title %}{{ test.title }} · Tests · Study Python for Finance{% endblock %}
+
+{% block main %}
+<div class="chapter-header">
+  <div class="phase-tag">Phase {{ test.phase }} · Test</div>
+  <div class="sep"></div>
+  <div class="title">{{ test.title }}</div>
+  <div class="page-count mono" id="timer">--:--</div>
+  <div class="page-count" id="q-counter">Q01 / {{ "%02d" % test.questions|length }}</div>
+  <button class="btn btn-secondary" onclick="exitTest()">Exit</button>
+</div>
+<div class="chapter-progress"><div class="fill" id="qbar" style="width: 0%;"></div></div>
+
+<!-- Splash -->
+<div class="page-pane" id="splash">
+  <div class="kicker">実力テスト</div>
+  <h1 class="hero mt-2">{{ test.title }}</h1>
+  <div class="rule-accent"></div>
+  <p class="sub">{{ test.description or "Phase " + test.phase + " の総合テストです。" }}</p>
+
+  <div class="history-stats mt-6">
+    <div class="it"><div class="v">{{ test.questions|length }}</div> <div class="l">Questions</div></div>
+    <div class="it"><div class="v">{{ test.time_limit_minutes }}</div>     <div class="l">Min</div></div>
+    <div class="it"><div class="v">{{ "%d"|format(test.pass_score * 100) }}%</div><div class="l">Pass</div></div>
+  </div>
+
+  <p class="muted mt-6">
+    ・各問題は穴埋め形式。Submit すると即座に採点されます。<br/>
+    ・制限時間を超えると自動で集計します。<br/>
+    ・中断するとそのテスト結果は記録されません。
+  </p>
+  <button class="btn btn-primary mt-6" onclick="startTest()">Start Test</button>
+</div>
+
+<!-- Per-question pane (built dynamically) -->
+<div class="page-pane hidden" id="qpane">
+  <div class="kicker" id="qkicker">Q01</div>
+  <h2 class="h1 mt-2" id="qtitle">—</h2>
+  <div class="rule-accent"></div>
+  <div class="md" id="qprompt">—</div>
+
+  <div class="code-card mt-6">
+    <div class="file-row"><span class="dot"></span><span>question.py</span></div>
+    <pre class="body" id="qcode">&nbsp;</pre>
+  </div>
+  <div class="output mt-4 hidden" id="qfeedback"></div>
+</div>
+
+<!-- Summary pane -->
+<div class="page-pane hidden" id="summary">
+  <div class="kicker">Result</div>
+  <div class="result-verdict mt-4" id="srverdict">—</div>
+  <div class="result-rule"></div>
+  <p class="sub mt-2" id="srmeta">—</p>
+  <button class="btn btn-primary mt-6" onclick="window.location='/tests'">テスト一覧へ →</button>
+</div>
+
+<div class="chapter-footer">
+  <div class="spacer"></div>
+  <button class="btn btn-primary hidden" id="submit-q-btn" onclick="submitQuestion()">Submit</button>
+  <button class="btn btn-secondary hidden" id="next-q-btn" onclick="nextQuestion()">Next Question →</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const TEST_ID = "{{ test.id }}";
+  const N_QUESTIONS = {{ test.questions|length }};
+  const TIME_LIMIT_SEC = {{ test.time_limit_minutes * 60 }};
+  const PASS_SCORE = {{ test.pass_score }};
+  const Q_DATA = {{ questions|tojson }};
+
+  let currentIdx = 0;
+  let startedAt = null;
+  let endsAt = null;
+  let timerHandle = null;
+  let passedCount = 0;
+  let perQuestion = [];
+
+  function startTest() {
+    document.getElementById("splash").classList.add("hidden");
+    document.getElementById("qpane").classList.remove("hidden");
+    startedAt = Date.now();
+    endsAt = startedAt + TIME_LIMIT_SEC * 1000;
+    tick();
+    timerHandle = setInterval(tick, 1000);
+    renderQuestion();
+  }
+
+  function tick() {
+    const rem = Math.max(0, Math.floor((endsAt - Date.now()) / 1000));
+    const m = String(Math.floor(rem / 60)).padStart(2, "0");
+    const s = String(rem % 60).padStart(2, "0");
+    document.getElementById("timer").textContent = `${m}:${s}`;
+    if (rem === 0) finishTest(true);
+  }
+
+  function renderQuestion() {
+    const q = Q_DATA[currentIdx];
+    document.getElementById("qkicker").textContent = `Q${String(currentIdx + 1).padStart(2, "0")}`;
+    document.getElementById("q-counter").textContent =
+      `Q${String(currentIdx + 1).padStart(2, "0")} / ${String(N_QUESTIONS).padStart(2, "0")}`;
+    document.getElementById("qbar").style.width =
+      `${((currentIdx) / N_QUESTIONS) * 100}%`;
+    document.getElementById("qtitle").textContent = q.title;
+    document.getElementById("qprompt").innerHTML = q.prompt_html;
+    document.getElementById("qcode").innerHTML = q.code_html;
+    document.getElementById("qfeedback").classList.add("hidden");
+    document.getElementById("submit-q-btn").classList.remove("hidden");
+    document.getElementById("next-q-btn").classList.add("hidden");
+  }
+
+  async function submitQuestion() {
+    const values = {};
+    document.querySelectorAll("#qcode .blank").forEach(el => {
+      values[el.dataset.slot] = el.value;
+    });
+    const r = await fetch("/api/test/grade", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({test_id: TEST_ID, question_index: currentIdx, values})
+    });
+    const data = await r.json();
+    const fb = document.getElementById("qfeedback");
+    fb.classList.remove("hidden");
+    if (data.overall_passed) {
+      passedCount += 1;
+      fb.innerHTML = "<strong style='color: var(--success);'>正解</strong>";
+    } else {
+      fb.innerHTML = "<strong class='err'>不正解</strong>";
+    }
+    perQuestion.push({
+      question_index: currentIdx, passed: data.overall_passed,
+      stdout: data.stdout, stderr: data.stderr,
+    });
+    document.getElementById("submit-q-btn").classList.add("hidden");
+    document.getElementById("next-q-btn").classList.remove("hidden");
+  }
+
+  function nextQuestion() {
+    currentIdx += 1;
+    if (currentIdx >= N_QUESTIONS) {
+      finishTest(false);
+    } else {
+      renderQuestion();
+    }
+  }
+
+  async function finishTest(timeout) {
+    clearInterval(timerHandle);
+    document.getElementById("qpane").classList.add("hidden");
+    document.getElementById("summary").classList.remove("hidden");
+    const verdict = document.getElementById("srverdict");
+    const meta    = document.getElementById("srmeta");
+    const ratio = passedCount / Math.max(N_QUESTIONS, 1);
+    const passed = ratio >= PASS_SCORE;
+    verdict.textContent = `${passedCount} / ${N_QUESTIONS}`;
+    verdict.classList.add(passed ? "pass" : "fail");
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    const m = Math.floor(elapsed / 60), s = elapsed % 60;
+    meta.textContent =
+      `${passed ? "Passed" : "Failed"}   ·   所要 ${m}分${s}秒`
+      + (timeout ? "（時間切れ）" : "");
+    document.getElementById("submit-q-btn").classList.add("hidden");
+    document.getElementById("next-q-btn").classList.add("hidden");
+    document.getElementById("qbar").style.width = "100%";
+
+    // Persist
+    await fetch("/api/test/record", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        test_id: TEST_ID,
+        score: passedCount,
+        total: N_QUESTIONS,
+        duration_sec: elapsed,
+        per_question_json: JSON.stringify(perQuestion),
+      })
+    });
+  }
+
+  function exitTest() {
+    if (confirm("テストを中断しますか？スコアは記録されません。")) {
+      window.location = "/tests";
+    }
+  }
+</script>
+{% endblock %}

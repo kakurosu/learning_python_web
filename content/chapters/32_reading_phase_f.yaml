@@ -1,0 +1,86 @@
+id: 32
+title: "コードを読もう — Phase F アプリ開発の総復習"
+phase: F
+prerequisites: [30, 31]
+learning_goals:
+  - "Streamlit と PyAutoGUI / Playwright のコードを読み解ける"
+
+pages:
+  # ─── Q1: Streamlit 基本（章 25） ───────────────────
+  - kind: reading
+    title: "Streamlit でテキスト表示（章 25 復習）"
+    prompt: |
+      下のコードが画面に表示するものとして正しいものを選んでください。
+    code: |
+      import streamlit as st
+      st.title("ポートフォリオ分析")
+      st.write("Sharpe Ratio:", 0.85)
+    code_file_label: "q01.py"
+    choices:
+      - "コンソールに 2 行だけ出力する"
+      - "Web ブラウザ上にタイトルと値（0.85）を表示する"
+      - "ファイルを書き出す"
+      - "エラーが出る（streamlit はライブラリではない）"
+    correct_index: 1
+    explanation: |
+      Streamlit は **Python スクリプトを Web アプリ化** するライブラリ。`streamlit run app.py` でブラウザ上に UI が描画され、`st.title`／`st.write` がそれぞれタイトルと本文として表示されます。
+
+  # ─── Q2: Streamlit ウィジェット（章 25） ───────────
+  - kind: reading
+    title: "Streamlit のスライダー（章 25 復習）"
+    prompt: |
+      下のコードについて、`risk_free` の型として正しいものを選んでください。
+    code: |
+      import streamlit as st
+      risk_free = st.slider("Risk-free rate (%)", 0.0, 5.0, 1.0, step=0.1)
+    code_file_label: "q02.py"
+    choices:
+      - "int"
+      - "float（ユーザーが選択した値）"
+      - "Streamlit 内部オブジェクト（数値ではない）"
+      - "list[float]"
+    correct_index: 1
+    explanation: |
+      `st.slider` は **ユーザーが現在選択している値そのもの** を返します。範囲を float で指定したので戻り値も float。`0.0 〜 5.0` の範囲、初期値 1.0、刻み 0.1 のスライダーです。
+
+  # ─── Q3: PyAutoGUI（章 26） ────────────────────────
+  - kind: reading
+    title: "マウス操作の自動化（章 26 復習）"
+    prompt: |
+      下のコードが行うこととして正しいものを選んでください。
+    code: |
+      import pyautogui
+      pyautogui.moveTo(500, 300, duration=0.5)
+      pyautogui.click()
+    code_file_label: "q03.py"
+    choices:
+      - "(500, 300) ピクセルの色を取得する"
+      - "画面上の座標 (500, 300) にマウスを 0.5 秒かけて動かし、クリックする"
+      - "500×300 の画像を保存する"
+      - "(500, 300) の位置にウィンドウを移動する"
+    correct_index: 1
+    explanation: |
+      `moveTo(x, y, duration)` はマウスカーソルを指定座標へ動かす（`duration` で滑らかに）、`click()` は現在位置でクリック。GUI 操作の自動化に使います。
+
+  # ─── Q4: Playwright（章 26） ───────────────────────
+  - kind: reading
+    title: "Playwright でページ取得（章 26 復習）"
+    prompt: |
+      下のコードが取得しているものとして正しいものを選んでください。
+    code: |
+      from playwright.sync_api import sync_playwright
+      with sync_playwright() as p:
+          browser = p.chromium.launch()
+          page = browser.new_page()
+          page.goto("https://example.com")
+          content = page.content()
+          browser.close()
+    code_file_label: "q04.py"
+    choices:
+      - "Chromium で example.com を開き、レンダリング後の HTML を取得する"
+      - "サーバーから生 HTML を直接取得する（JS は実行されない）"
+      - "example.com のスクリーンショットを撮る"
+      - "example.com の DNS レコード"
+    correct_index: 0
+    explanation: |
+      Playwright は **ヘッドレスブラウザ** を起動し、JavaScript を実行した **後の** DOM を取得できます。`page.content()` はレンダリング済み HTML を返すので、SPA など requests では取れないサイトに有効です。

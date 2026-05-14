@@ -1,0 +1,122 @@
+id: 14
+title: "matplotlib 入門"
+phase: B
+prerequisites: [13]
+learning_goals:
+  - "折れ線・棒・散布図・ヒストグラムを描ける"
+  - "タイトル・軸ラベル・凡例を付けられる"
+  - "複数のプロットを組み合わせられる"
+
+pages:
+  - kind: sample
+    title: "matplotlib でグラフを描く"
+    markdown: |
+      ## 基本パターン
+      `import matplotlib.pyplot as plt` が定番。
+      ノート上では `plt.plot(...)` の後に `plt.show()` を書きます（Jupyter では自動）。
+    sample_code: |
+      import matplotlib.pyplot as plt
+      x = [1, 2, 3, 4, 5]
+      y = [1, 4, 9, 16, 25]
+      plt.plot(x, y, marker='o')
+      plt.title("y = x^2")
+      plt.xlabel("x")
+      plt.ylabel("y")
+      plt.show()
+    runnable: true
+    stickman: explain
+    stickman_speech: "実行ボタンでグラフが出てくるよ！"
+
+  - kind: exercise
+    title: "終値の折れ線グラフを描こう"
+    prompt: |
+      `df["AAA"]` の値を **折れ線で** 描いてください。
+      `plt.plot(...)` を使います。
+    code_template: |
+      import pandas as pd
+      import matplotlib.pyplot as plt
+      df = pd.read_csv("data/stock_prices.csv")
+      plt.{{slot:fn}}(df["AAA"])
+      plt.title("AAA price")
+      plt.show()
+      print("done")
+    blanks:
+      - id: fn
+        canonical_answer: "plot"
+        accept_patterns: ['^plot$']
+        hint: "折れ線関数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^done\s*$'
+    hints:
+      - "折れ線は plt.plot(...)。"
+      - "`plot` だね。"
+    stickman_feedback:
+      correct: "折れ線で時系列を眺めるのが分析の入口！"
+      wrong_hint1: "折れ線関数の名前。"
+      wrong_hint2: "`plot`"
+      wrong_hint3: "`plot`"
+
+  - kind: exercise
+    title: "ヒストグラムでリターン分布を見よう"
+    prompt: |
+      日次リターンの **ヒストグラム** を描いてください。bin（階級）数は 30 にします。
+    code_template: |
+      import numpy as np
+      import matplotlib.pyplot as plt
+      np.random.seed(0)
+      r = np.random.normal(0, 0.01, 1000)
+      plt.{{slot:fn}}(r, bins={{slot:bins}})
+      plt.title("Return distribution")
+      plt.show()
+      print("done")
+    blanks:
+      - id: fn
+        canonical_answer: "hist"
+        accept_patterns: ['^hist$']
+        hint: "ヒストグラム関数"
+      - id: bins
+        canonical_answer: "30"
+        accept_patterns: ['^30$']
+        hint: "階級数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^done\s*$'
+    hints:
+      - "ヒストグラムは plt.hist(配列, bins=...)。"
+      - "`hist` と `30`。"
+    stickman_feedback:
+      correct: "リターン分布の形を見るのは大事！"
+      wrong_hint1: "`hist` と `30`。"
+      wrong_hint2: "`hist` と `30`。"
+      wrong_hint3: "`hist` と `30`。"
+
+  - kind: exercise
+    title: "散布図で相関を見よう"
+    prompt: |
+      2 銘柄の終値の散布図を描いてください。`plt.scatter(x, y)` を使います。
+    code_template: |
+      import pandas as pd
+      import matplotlib.pyplot as plt
+      df = pd.read_csv("data/stock_prices.csv")
+      plt.{{slot:fn}}(df["AAA"], df["BBB"])
+      plt.xlabel("AAA")
+      plt.ylabel("BBB")
+      plt.show()
+      print("done")
+    blanks:
+      - id: fn
+        canonical_answer: "scatter"
+        accept_patterns: ['^scatter$']
+        hint: "散布図関数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^done\s*$'
+    hints:
+      - "散布図は plt.scatter(...)。"
+      - "`scatter` だね。"
+    stickman_feedback:
+      correct: "散布図は相関を直感で掴むのに最適！"
+      wrong_hint1: "散布図関数の名前。"
+      wrong_hint2: "`scatter`"
+      wrong_hint3: "`scatter`"

@@ -1,0 +1,138 @@
+id: 15
+title: "pandas 応用 (groupby / merge / pct_change)"
+phase: B
+prerequisites: [13]
+learning_goals:
+  - "groupby で集計できる"
+  - "merge で 2 つの DataFrame を結合できる"
+  - "pct_change で前期比リターンを計算できる"
+
+pages:
+  - kind: sample
+    title: "pct_change で価格→リターン"
+    markdown: |
+      ## 価格系列からリターン系列へ
+      終値の系列があるとき、`.pct_change()` で **前日比リターン** が一発で計算できます。
+      最初の値は基準が無いので NaN になります。
+    sample_code: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      ret = df["AAA"].pct_change()
+      print(ret.head())
+      print("年率:", round(ret.mean() * 252, 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "pct_change はリターン計算の超頻出パターン！"
+
+  - kind: sample
+    title: "groupby で集計"
+    markdown: |
+      ## カテゴリ別の集計
+      ファンドのリターンを `カテゴリ別の平均` で見たいときは `groupby("列名").mean()` を使います。
+    sample_code: |
+      import pandas as pd
+      df = pd.DataFrame({
+          "category": ["growth", "value", "growth", "value", "value"],
+          "return": [0.12, 0.08, 0.15, 0.06, 0.09],
+      })
+      print(df.groupby("category")["return"].mean())
+    runnable: true
+    stickman: explain
+    stickman_speech: "Excel のピボット集計が 1 行で書けるよ！"
+
+  - kind: exercise
+    title: "pct_change でリターン系列を作ろう"
+    prompt: |
+      `df["AAA"]` から日次リターン系列 `r` を作って、平均値を表示してください。
+    code_template: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      r = df["AAA"].{{slot:m}}().dropna()
+      print(round(float(r.mean()), 6))
+    blanks:
+      - id: m
+        canonical_answer: "pct_change"
+        accept_patterns: ['^pct_change$']
+        hint: "前期比のメソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^-?0\.\d+'
+      - kind: namespace_check
+        asserts:
+          - "len(r) == 59"  # 60 days, 1 NaN dropped
+    hints:
+      - "前期比のメソッドは pct_change。"
+      - "`pct_change` だね。"
+    stickman_feedback:
+      correct: "ファンド評価の出発点！"
+      wrong_hint1: "`pct_change`"
+      wrong_hint2: "`pct_change`"
+      wrong_hint3: "`pct_change`"
+
+  - kind: exercise
+    title: "groupby でカテゴリ別平均を計算しよう"
+    prompt: |
+      下の DataFrame から **カテゴリ別** の平均リターンを出してください。
+    code_template: |
+      import pandas as pd
+      df = pd.DataFrame({
+          "cat": ["A","A","B","B","B"],
+          "ret": [0.10, 0.05, 0.08, 0.04, 0.12],
+      })
+      avg = df.{{slot:fn}}("cat")["ret"].{{slot:agg}}()
+      print(avg.round(3).to_dict())
+    blanks:
+      - id: fn
+        canonical_answer: "groupby"
+        accept_patterns: ['^groupby$']
+        hint: "集計の関数"
+      - id: agg
+        canonical_answer: "mean"
+        accept_patterns: ['^mean$']
+        hint: "平均"
+    test_cases:
+      - kind: stdout_regex
+        pattern: "'A': 0\\.075"
+      - kind: stdout_regex
+        pattern: "'B': 0\\.08"
+    hints:
+      - "`df.groupby(\"列\")[\"値\"].mean()`。"
+      - "`groupby` と `mean`。"
+    stickman_feedback:
+      correct: "ピボット系の集計はこれが基本！"
+      wrong_hint1: "`groupby` と `mean`。"
+      wrong_hint2: "`groupby` と `mean`。"
+      wrong_hint3: "`groupby` と `mean`。"
+
+  - kind: exercise
+    title: "merge で 2 つの表を結合しよう"
+    prompt: |
+      ファンドの基本情報 `info` と 経費率 `expense` を **`name` 列で** 結合してください。
+    code_template: |
+      import pandas as pd
+      info = pd.DataFrame({"name": ["A","B","C"], "category": ["growth","value","growth"]})
+      expense = pd.DataFrame({"name": ["A","B","C"], "ratio": [0.012, 0.008, 0.020]})
+      merged = info.{{slot:fn}}(expense, on={{slot:key}})
+      print(merged.shape)
+    blanks:
+      - id: fn
+        canonical_answer: "merge"
+        accept_patterns: ['^merge$']
+        hint: "結合のメソッド"
+      - id: key
+        canonical_answer: '"name"'
+        accept_patterns:
+          - '^"name"$'
+          - "^'name'$"
+        hint: "結合に使う列名"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\(3, 3\)'
+    hints:
+      - "結合は merge、引数は on=\"列名\"。"
+      - "`merge` と `\"name\"`。"
+    stickman_feedback:
+      correct: "テーブル結合は実務で必須スキル！"
+      wrong_hint1: "`merge` と `\"name\"`。"
+      wrong_hint2: "`merge` と `\"name\"`。"
+      wrong_hint3: "`merge` と `\"name\"`。"

@@ -1,0 +1,211 @@
+id: 1
+title: "はじめての Python"
+phase: A
+prerequisites: []
+learning_goals:
+  - "`print()` でメッセージを画面に表示できる"
+  - "文字列はクォートで囲むことを理解する"
+  - "簡単な関数を `def` で定義できる"
+  - "`lambda` で 1 行関数を書ける"
+
+pages:
+  # ─── ① サンプル: print の使い方 ────────────────────
+  - kind: sample
+    title: "Python でメッセージを表示しよう"
+    markdown: |
+      ## ようこそ Python の世界へ
+      Python では `print()` を使って文字を画面に表示できます。
+      文字列（文字の並び）は **ダブルクォート** `"` か **シングルクォート** `'` で囲みます。
+
+      下のサンプルコードを実行ボタンで動かしてみよう。
+    sample_code: |
+      print("Hello, Python!")
+    runnable: true
+    expected_output: "Hello, Python!"
+    stickman: explain
+    stickman_speech: "実行ボタンを押すと、Python が文字を出してくれるよ！"
+
+  # ─── ② 演習: print の引数を埋める ──────────────────
+  - kind: exercise
+    title: "メッセージを変えてみよう"
+    prompt: |
+      `print()` は Python の **最も基本的な出力命令** です。カッコの中に書いた文字列がそのまま画面に表示されます。
+
+      下のコードの空欄を埋めて、画面に `Hello, World!` と表示されるようにしましょう。文字列は ダブルクォート `"..."` か シングルクォート `'...'` で囲みます。
+
+      **ポイント**: クォートを忘れると Python は識別子（変数）として解釈し `NameError` になります。
+    code_template: |
+      print({{slot:msg}})
+    blanks:
+      - id: msg
+        placeholder: '"..."'
+        width: 22
+        accept_patterns:
+          - '^"Hello, World!"$'
+          - "^'Hello, World!'$"
+        canonical_answer: '"Hello, World!"'
+        hint: '文字列はクォートで囲もう: "Hello, World!"'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^Hello, World!\s*$'
+    hints:
+      - "文字列はクォート（\" か '）で囲む必要があるよ。"
+      - 'カンマと感嘆符を忘れずに: Hello, World!'
+      - '"Hello, World!" を入れてみよう。'
+    stickman_feedback:
+      correct: "やった！はじめてのプログラム、成功だね"
+      wrong_hint1: "文字列はクォートで囲もう。"
+      wrong_hint2: "カンマや !（エクスクラメーション）も必要だよ。"
+      wrong_hint3: '答えは "Hello, World!" だよ。'
+
+  # ─── ③ サンプル: 数値の足し算 ──────────────────────
+  - kind: sample
+    title: "計算もできる"
+    markdown: |
+      `print()` の中には **計算式** を入れることもできます。
+      Python は `+` や `*` などの演算子を使って計算してくれます。
+    sample_code: |
+      print(2 + 3)
+      print(10 * 5)
+    runnable: true
+    expected_output: "5\n50"
+    stickman: explain
+    stickman_speech: "数字はクォートで囲まずに書くよ。実行してみよう！"
+
+  # ─── ④ 演習: 計算式の核を埋める ────────────────────
+  - kind: exercise
+    title: "100 円のリンゴ 7 個の合計金額"
+    prompt: |
+      Python は **電卓のように使える** プログラミング言語です。`+ - * /` の四則演算がそのまま動きます。
+
+      `price = 100` のように **変数** に値を入れておくと、後から名前で呼び出せます。
+      下のコードの空欄を埋めて、リンゴの合計金額（100 × 7 = 700 円）を計算しよう。
+
+      **ポイント**: 数値はクォートで囲みません。`"100" * "7"` はエラーになります。
+    code_template: |
+      price = 100
+      count = 7
+      total = {{slot:expr}}
+      print(total)
+    blanks:
+      - id: expr
+        placeholder: "計算式"
+        width: 18
+        accept_patterns:
+          - '^price\s*\*\s*count$'
+          - '^count\s*\*\s*price$'
+          - '^100\s*\*\s*7$'
+          - '^7\s*\*\s*100$'
+        canonical_answer: "price * count"
+        hint: "price と count を * で掛けるよ"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^700\s*$'
+      - kind: namespace_check
+        asserts:
+          - "total == 700"
+    hints:
+      - "掛け算は * を使うよ。"
+      - "変数 price と count をそのまま使えるよ。"
+      - "答えは `price * count` だよ。"
+    stickman_feedback:
+      correct: "正解！変数を使うとコードが読みやすくなるね。"
+      wrong_hint1: "* で 2 つの変数を掛けてみよう。"
+      wrong_hint2: "`price * count` でいいよ。"
+      wrong_hint3: "`price * count` を入れてね。"
+
+  # ─── ⑤ 演習: def 文の核を埋める ────────────────────
+  - kind: exercise
+    title: "あいさつ関数を作ろう（def）"
+    prompt: |
+      **基本形**:
+      ```python
+      def 関数名(引数1, 引数2):
+          処理
+          return 戻り値
+      ```
+
+      **使いどころ**: 同じ計算を複数回するとき / コードの意図に名前を付けたいとき。
+
+      **注意**: 引数欄で宣言した名前と、本体で使う名前は **同じ** にする。
+      下の `greet` を完成させて、`greet("Alice")` が `Hello, Alice!` を表示するようにしよう。
+    code_template: |
+      def greet({{slot:arg}}):
+          print("Hello, " + {{slot:name_var}} + "!")
+
+      greet("Alice")
+    blanks:
+      - id: arg
+        placeholder: "引数名"
+        width: 12
+        accept_patterns:
+          - '^[A-Za-z_]\w*$'
+        canonical_answer: "name"
+        hint: "好きな引数名でOK（例: name）"
+      - id: name_var
+        placeholder: "引数名"
+        width: 12
+        accept_patterns:
+          - '^[A-Za-z_]\w*$'
+        canonical_answer: "name"
+        hint: "上で決めた引数名と同じものを入れる"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^Hello, Alice!\s*$'
+    hints:
+      - "引数名はどんな名前でもいいけれど、上下で同じ名前にしようね。"
+      - "本体の中で引数の値を使うときは、その引数名をそのまま書くよ。"
+      - "`name` を 2 つの空欄に入れれば動くよ。"
+    stickman_feedback:
+      correct: "関数定義の感覚をつかめたね！「同じ名前を 2 か所」がポイントだよ。"
+      wrong_hint1: "`def 関数名(引数):` の形を思い出そう。"
+      wrong_hint2: "上の引数名と本体で使う名前は同じだよ。"
+      wrong_hint3: "両方とも `name` を入れてね。"
+
+  # ─── ⑥ 演習: lambda の核を埋める ───────────────────
+  - kind: exercise
+    title: "lambda で 1 行関数を作ろう"
+    prompt: |
+      **基本形**:
+      ```python
+      square = lambda x: x ** 2          # 1 引数
+      add    = lambda x, y: x + y        # 2 引数
+      ```
+
+      **使いどころ**:
+      ```python
+      sorted(funds, key=lambda f: f[1])  # ソート時のキー
+      df["col"].apply(lambda x: x * 2)   # pandas で全要素変換
+      ```
+
+      `return` は書かない（式の値がそのまま戻る）。下の `add` を完成させて `add(3, 5)` が `8` を返すように。
+    code_template: |
+      add = lambda {{slot:args}}: {{slot:expr}}
+      print(add(3, 5))
+    blanks:
+      - id: args
+        placeholder: "引数たち"
+        width: 12
+        accept_patterns:
+          - '^[A-Za-z_]\w*\s*,\s*[A-Za-z_]\w*$'
+        canonical_answer: "x, y"
+        hint: "引数は 2 つ、カンマで区切る"
+      - id: expr
+        placeholder: "計算式"
+        width: 12
+        accept_patterns:
+          - '^[A-Za-z_]\w*\s*\+\s*[A-Za-z_]\w*$'
+        canonical_answer: "x + y"
+        hint: "引数を + で足すよ"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^8\s*$'
+    hints:
+      - "引数は `x, y` のようにカンマで区切るよ。"
+      - "本体は引数を + で足すだけ。"
+      - "`x, y` と `x + y` を入れてね。"
+    stickman_feedback:
+      correct: "lambda は短い関数を 1 行で書きたいときに便利だよ！"
+      wrong_hint1: "`lambda 引数1, 引数2: 式` の形だよ。"
+      wrong_hint2: "引数 2 つと、それを足す式を書こう。"
+      wrong_hint3: "答えは `x, y` と `x + y` だよ。"

@@ -1,0 +1,151 @@
+id: 28
+title: "LLM の使い方 (OpenAI SDK)"
+phase: E
+prerequisites: [10]
+learning_goals:
+  - "system / user メッセージの役割を理解する"
+  - "プロンプトのトークン数とコストを意識する"
+  - "model / max_tokens / temperature の意味を知る"
+  - "API キー無しでも動く擬似 LLM を書ける"
+
+pages:
+  - kind: sample
+    title: "LLM API の基本構造"
+    markdown: |
+      ## メッセージは role / content の組
+      OpenAI Chat Completions API は次のような構造でリクエストを送ります。
+
+      - **system**: モデルへの指示（人格・出力フォーマット等）
+      - **user / assistant**: 会話履歴
+
+      ```python
+      from openai import OpenAI
+      client = OpenAI()  # api_key は環境変数 OPENAI_API_KEY を自動で読む
+
+      response = client.chat.completions.create(
+          model="gpt-4o-mini",
+          max_tokens=200,
+          messages=[
+              {"role": "system", "content": "あなたは投資アナリストです"},
+              {"role": "user",   "content": "シャープレシオとは？"},
+          ],
+      )
+      print(response.choices[0].message.content)
+      ```
+
+      この章ではキー無しで動く **擬似 LLM 関数** を作って構造の理解を深めます。
+    sample_code: |
+      def fake_llm(messages):
+          last = messages[-1]["content"]
+          return f"あなたの質問は: {last!r} ですね。回答を生成しました。"
+
+      print(fake_llm([{"role": "user", "content": "Hello"}]))
+    runnable: true
+    stickman: explain
+    stickman_speech: "API 構造を理解すれば、本物の API も同じ感覚で使える。"
+
+  - kind: sample
+    title: "system プロンプトで人格を与える"
+    markdown: |
+      ## system は方向付け
+      `system` メッセージで「どういう立場・口調で答えるか」を指示します。
+      LLM の出力品質は **system プロンプト次第** で大きく変わります。
+
+      OpenAI SDK では messages リストの **先頭** に `{"role": "system", ...}` を入れます。
+    sample_code: |
+      def fake_llm(system, user_msg):
+          return f"[system: {system}]\n[user: {user_msg}]\n→ 回答を生成"
+
+      print(fake_llm("あなたは投資アナリストです", "シャープレシオを 50 字で"))
+    runnable: true
+    stickman: explain
+    stickman_speech: "system は LLM の「役柄」を決める。"
+
+  - kind: exercise
+    title: "メッセージリストを組み立てよう"
+    prompt: |
+      `messages` リストに **user 役割のメッセージ** を 1 件追加してください。
+      OpenAI / Anthropic / その他主要 LLM API でこの形式は共通です。
+    code_template: |
+      messages = [
+          {{slot:msg}},
+      ]
+      print(messages[0]["role"])
+    blanks:
+      - id: msg
+        canonical_answer: '{"role": "user", "content": "Hello"}'
+        accept_patterns:
+          - '^\{\s*"role"\s*:\s*"user"\s*,\s*"content"\s*:\s*".*"\s*\}$'
+        hint: 'role と content を持つ辞書'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^user\s*$'
+    hints:
+      - "辞書で role='user', content='...' を持つ。"
+      - '`{"role": "user", "content": "Hello"}`'
+    stickman_feedback:
+      correct: "API への基本フォーマット、これで OK。"
+      wrong_hint1: '`{"role": "user", "content": "Hello"}`'
+      wrong_hint2: '`{"role": "user", "content": "Hello"}`'
+      wrong_hint3: '`{"role": "user", "content": "Hello"}`'
+
+  - kind: exercise
+    title: "擬似 LLM 関数を作ろう"
+    prompt: |
+      入力された文字列の **長さに応じて** 違う返事をする擬似 LLM 関数を完成させてください。
+    code_template: |
+      def fake_llm(text):
+          if {{slot:cond}}:
+              return "短すぎます。もっと詳しく書いてください。"
+          return f"質問を承りました: {text[:20]}..."
+
+      print(fake_llm("hi"))
+    blanks:
+      - id: cond
+        canonical_answer: "len(text) < 5"
+        accept_patterns:
+          - '^len\(text\)\s*<\s*5$'
+        hint: "文字数が 5 未満"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '短すぎます'
+    hints:
+      - "`len(text) < 5`"
+      - "`len(text) < 5`"
+    stickman_feedback:
+      correct: "条件分岐で挙動を切り替える、LLM ラッパーの基本パターン。"
+      wrong_hint1: "`len(text) < 5`"
+      wrong_hint2: "`len(text) < 5`"
+      wrong_hint3: "`len(text) < 5`"
+
+  - kind: exercise
+    title: "コスト意識: トークン数を概算しよう"
+    prompt: |
+      ざっくり **「文字数 ÷ 4 がトークン数」** と概算する関数を作ってください
+      （日本語ではより多いですが、概算指標として）。
+
+      OpenAI の料金は 1M トークンあたり $0.15〜（gpt-4o-mini）から。
+      実運用時は `tiktoken` ライブラリで正確に数えます。
+    code_template: |
+      def estimate_tokens(text):
+          return {{slot:expr}}
+
+      print(estimate_tokens("Hello world. This is a test prompt."))
+    blanks:
+      - id: expr
+        canonical_answer: "len(text) // 4"
+        accept_patterns:
+          - '^len\(text\)\s*//\s*4$'
+          - '^int\(len\(text\)\s*/\s*4\)$'
+        hint: "整数除算 // を使う"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^8\s*$'
+    hints:
+      - "整数除算 // を使う。"
+      - "`len(text) // 4`"
+    stickman_feedback:
+      correct: "トークン数を意識する習慣はコスト管理に必須。"
+      wrong_hint1: "`len(text) // 4`"
+      wrong_hint2: "`len(text) // 4`"
+      wrong_hint3: "`len(text) // 4`"

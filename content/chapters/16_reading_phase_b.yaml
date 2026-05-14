@@ -1,0 +1,172 @@
+id: 16
+title: "コードを読もう — Phase B 数値ライブラリの総復習"
+phase: B
+prerequisites: [12, 13, 14, 15]
+learning_goals:
+  - "NumPy のベクトル演算と pandas の DataFrame/Series 操作を読み解ける"
+  - "matplotlib の基本的な描画コードの意味を理解する"
+
+pages:
+  # ─── Q1: NumPy ブロードキャスト（章 11） ────────────
+  - kind: reading
+    title: "NumPy ブロードキャスト（章 11 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      import numpy as np
+      a = np.array([1, 2, 3, 4])
+      print(a * 10)
+    code_file_label: "q01.py"
+    choices:
+      - "[10, 20, 30, 40]"
+      - "[1, 2, 3, 4, 10]"
+      - "40"
+      - "TypeError が出る"
+    correct_index: 0
+    explanation: |
+      NumPy 配列にスカラーを掛けると、ブロードキャストにより各要素にスカラーが掛けられます。`for` ループを書かずにベクトル演算が可能なのが NumPy の利点です。
+
+  # ─── Q2: NumPy 集計（章 11） ────────────────────────
+  - kind: reading
+    title: "NumPy 配列の平均（章 11 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      import numpy as np
+      returns = np.array([0.01, -0.02, 0.03, 0.04])
+      print(returns.mean())
+    code_file_label: "q02.py"
+    choices:
+      - "0.06"
+      - "0.015"
+      - "0.04"
+      - "0.0"
+    correct_index: 1
+    explanation: |
+      平均は `(0.01 + (-0.02) + 0.03 + 0.04) / 4 = 0.06 / 4 = 0.015`。`ndarray.mean()` は全要素の算術平均を返します。
+
+  # ─── Q3: pandas Series 抽出（章 12） ────────────────
+  - kind: reading
+    title: "pandas Series のインデックス（章 12 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      import pandas as pd
+      s = pd.Series([100, 200, 300], index=["A", "B", "C"])
+      print(s["B"])
+    code_file_label: "q03.py"
+    choices:
+      - "100"
+      - "200"
+      - "300"
+      - "B"
+    correct_index: 1
+    explanation: |
+      pandas の Series はラベル（index）でアクセスできます。`s["B"]` はラベル "B" に対応する値 `200` を返します。
+
+  # ─── Q4: DataFrame の列選択（章 12） ────────────────
+  - kind: reading
+    title: "DataFrame の列フィルタ（章 12 復習）"
+    prompt: |
+      下のコードを実行すると、何が起きるか正しいものを選んでください。
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({
+          "fund": ["A", "B", "C"],
+          "aum": [100, 200, 50],
+      })
+      print(df[df["aum"] >= 100]["fund"].tolist())
+    code_file_label: "q04.py"
+    choices:
+      - "['A', 'B']"
+      - "['A', 'B', 'C']"
+      - "['C']"
+      - "[100, 200]"
+    correct_index: 0
+    explanation: |
+      `df["aum"] >= 100` でブール Series を作り、`df[...]` で行をフィルタ。残るのは A と B の行で、その `fund` 列を list 化すると `['A', 'B']`。
+
+  # ─── Q5: matplotlib のプロット種類（章 13） ─────────
+  - kind: reading
+    title: "matplotlib の描画関数（章 13 復習）"
+    prompt: |
+      下のコードはどんなグラフを描きますか？
+    code: |
+      import matplotlib.pyplot as plt
+      x = [1, 2, 3, 4]
+      y = [2, 5, 3, 8]
+      plt.plot(x, y)
+      plt.show()
+    code_file_label: "q05.py"
+    choices:
+      - "折れ線グラフ（line plot）"
+      - "棒グラフ（bar chart）"
+      - "散布図（scatter plot）"
+      - "ヒストグラム"
+    correct_index: 0
+    explanation: |
+      `plt.plot(x, y)` は **折れ線グラフ** を描く関数です。棒グラフは `plt.bar`、散布図は `plt.scatter`、ヒストグラムは `plt.hist` を使います。
+
+  # ─── Q6: matplotlib 散布図（章 13） ─────────────────
+  - kind: reading
+    title: "scatter の役割（章 13 復習）"
+    prompt: |
+      下のコードの目的として最も近いものを選んでください。
+    code: |
+      import matplotlib.pyplot as plt
+      plt.scatter(returns_a, returns_b)
+      plt.xlabel("Fund A return")
+      plt.ylabel("Fund B return")
+      plt.show()
+    code_file_label: "q06.py"
+    choices:
+      - "ファンド A と B のリターンの相関を視覚化する"
+      - "ファンド A と B の合計リターンを棒グラフで比較する"
+      - "ファンド A のリターン分布をヒストグラムで描く"
+      - "時系列リターンを折れ線で描く"
+    correct_index: 0
+    explanation: |
+      `scatter` は 2 変数の点をプロットするので、共分散・相関の視覚的確認に使われます。x 軸 A、y 軸 B のリターンを散布図にすることで、両者の連動度を目で見ることができます。
+
+  # ─── Q7: pandas 応用: groupby（章 14） ─────────────
+  - kind: reading
+    title: "groupby 集計（章 14 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      import pandas as pd
+      df = pd.DataFrame({
+          "sector": ["IT", "IT", "FIN", "FIN"],
+          "ret": [0.10, 0.20, 0.05, 0.15],
+      })
+      print(df.groupby("sector")["ret"].mean().to_dict())
+    code_file_label: "q07.py"
+    choices:
+      - "{'IT': 0.15, 'FIN': 0.10}"
+      - "{'IT': 0.30, 'FIN': 0.20}"
+      - "{'IT': 0.10, 'FIN': 0.05}"
+      - "{'IT': 0.20, 'FIN': 0.15}"
+    correct_index: 0
+    explanation: |
+      `groupby("sector")` でセクター別に分け、`["ret"].mean()` で平均を取ります。IT は (0.10 + 0.20)/2 = 0.15、FIN は (0.05 + 0.15)/2 = 0.10。
+
+  # ─── Q8: pandas merge（章 14） ──────────────────────
+  - kind: reading
+    title: "merge の挙動（章 14 復習）"
+    prompt: |
+      下のコードを実行したとき、結果の行数として正しいものを選んでください。
+    code: |
+      import pandas as pd
+      left = pd.DataFrame({"fund": ["A", "B", "C"], "aum": [100, 200, 50]})
+      right = pd.DataFrame({"fund": ["A", "B"], "fee": [0.01, 0.02]})
+      merged = left.merge(right, on="fund", how="inner")
+      print(len(merged))
+    code_file_label: "q08.py"
+    choices:
+      - "2 行"
+      - "3 行"
+      - "5 行"
+      - "0 行"
+    correct_index: 0
+    explanation: |
+      `how="inner"` は両方のキーに存在する行だけ残す内部結合。`fund` が共通なのは A と B のみなので結果は 2 行になります。

@@ -1,0 +1,128 @@
+id: 4
+title: "コメントと docstring"
+phase: A
+prerequisites: [3]
+learning_goals:
+  - "`#` で 1 行コメントを書ける"
+  - "関数の最初に docstring を書ける"
+  - "`help()` で docstring を表示できる"
+
+pages:
+  - kind: sample
+    title: "コメントは未来の自分への手紙"
+    markdown: |
+      ## なぜコメントを書く？
+      `#` から行末まではコメントで、Python は無視します。
+      数週間後に自分のコードを読み返すと、何をやっていたか忘れがちです。
+      **「なぜ」その処理が必要かを書く** のが良いコメントのコツ。
+    sample_code: |
+      # 営業日換算で年率に変換する
+      daily_return = 0.001
+      annual_return = daily_return * 252  # 252 = 米国の年間営業日
+      print(annual_return)
+    runnable: true
+    expected_output: "0.252"
+    stickman: explain
+    stickman_speech: "「何をしているか」より「なぜしているか」を書こう。"
+
+  - kind: sample
+    title: "docstring で関数を説明する"
+    markdown: |
+      ## docstring
+      関数の最初の行（インデントの中）に置く文字列が **docstring** です。
+      `"""` で囲んだ複数行文字列をよく使います。
+      `help(関数名)` で表示でき、IDE のヒントにも使われます。
+    sample_code: |
+      def sharpe_ratio(mean_return, volatility, rf=0.0):
+          """シャープレシオを計算する。
+
+          Args:
+              mean_return: 期待リターン
+              volatility:  ボラティリティ（標準偏差）
+              rf:          リスクフリーレート
+          """
+          return (mean_return - rf) / volatility
+
+      help(sharpe_ratio)
+    runnable: true
+    stickman: explain
+    stickman_speech: "docstring は「この関数は何をするか」を 1 行目に書こう。"
+
+  - kind: exercise
+    title: "意味のあるコメントを足そう"
+    prompt: |
+      コメントは「**未来の自分・チームメイトへの手紙**」です。1 ヶ月後にコードを読み返したとき、過去の自分が何を考えていたかを思い出すための道しるべ。
+
+      良いコメントの 3 原則:
+      1. **「なぜ」を書く**（「何を」はコードを読めば分かる）
+      2. **マジックナンバーの根拠**（「252 = 米国営業日」のように）
+      3. **嘘をつかない**（コードを変えたらコメントも更新）
+
+      下のコードに `# 円→ドル換算` の 1 行コメントを **`rate` の上** に追加して、出力 `66.67` が変わらないことを確かめよう。
+    code_template: |
+      jpy = 10000
+      {{slot:comment}}
+      rate = 150
+      usd = jpy / rate
+      print(round(usd, 2))
+    blanks:
+      - id: comment
+        placeholder: "# ..."
+        width: 24
+        accept_patterns:
+          - '^#\s*円→ドル換算\s*$'
+          - '^#\s*JPY\s*to\s*USD.*$'
+        canonical_answer: "# 円→ドル換算"
+        hint: "`#` で始めると 1 行コメントになる"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^66\.67\s*$'
+    hints:
+      - "コメントは `#` から始めよう。"
+      - "`# 円→ドル換算` を入れてみて。"
+    stickman_feedback:
+      correct: "あとで読み返すときに自分が助かるよ！"
+      wrong_hint1: "`#` で始める 1 行コメントを書こう。"
+      wrong_hint2: "`# 円→ドル換算` だね。"
+      wrong_hint3: "答えは `# 円→ドル換算`。"
+
+  - kind: exercise
+    title: "関数に docstring を書こう"
+    prompt: |
+      **docstring** は関数・クラス・モジュールの **最初の文** に書く文字列で、自動的に「ドキュメント」として認識されます。VSCode などの IDE はこれを読んでホバー時にヒントを出してくれます。
+
+      `help(関数名)` や `関数名.__doc__` でも参照可能。
+      ```python
+      def f(x):
+          "x を 2 倍する"   # ← これが docstring
+          return x * 2
+      ```
+
+      `annualize` の最初の行に `"日次リターンを年率換算する"` という docstring を書こう。クォートで囲むのを忘れずに。
+    code_template: |
+      def annualize(daily):
+          {{slot:doc}}
+          return daily * 252
+
+      print(annualize(0.001))
+      print(annualize.__doc__)
+    blanks:
+      - id: doc
+        placeholder: '"..."'
+        width: 30
+        accept_patterns:
+          - '^"日次リターンを年率換算する"$'
+          - '^"""日次リターンを年率換算する"""$'
+        canonical_answer: '"日次リターンを年率換算する"'
+        hint: 'クォートで囲んだ文字列を関数の最初に置くと docstring になる'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.252\s*\n日次リターンを年率換算する\s*$'
+    hints:
+      - "クォート (`\"` か `\"\"\"`) で囲んだ文字列を 1 行目に置く。"
+      - '`"日次リターンを年率換算する"` を入れてみて。'
+    stickman_feedback:
+      correct: "docstring を書くプロは自分のコードに優しいよ！"
+      wrong_hint1: "クォートで囲んだ文字列を 1 行目に書こう。"
+      wrong_hint2: '`"日次リターンを年率換算する"` だね。'
+      wrong_hint3: '答えは `"日次リターンを年率換算する"`。'

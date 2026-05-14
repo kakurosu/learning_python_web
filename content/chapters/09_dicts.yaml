@@ -1,0 +1,116 @@
+id: 9
+title: "辞書と集合"
+phase: A
+prerequisites: [8]
+learning_goals:
+  - "辞書 (dict) で key-value を扱える"
+  - "辞書の追加・更新・参照ができる"
+  - "items / keys / values で反復できる"
+  - "set で重複排除ができる"
+
+pages:
+  - kind: sample
+    title: "辞書の基本"
+    markdown: |
+      ## 辞書 = key→value の対応表
+      `{key: value}` で書きます。
+      ファンドの属性管理など、名前で値を引きたいときに便利。
+    sample_code: |
+      fund = {"name": "AAA Fund", "expense_ratio": 0.012, "aum": 5e9}
+      print(fund["name"])
+      print(fund["expense_ratio"])
+      fund["nav"] = 12345.67   # 追加
+      print(fund)
+    runnable: true
+    stickman: explain
+    stickman_speech: "[ ] でアクセスし、新しい key も同じ書き方で追加できるよ。"
+
+  - kind: sample
+    title: "辞書の反復"
+    markdown: |
+      `for k, v in dict.items():` で key と value を同時に取り出せます。
+    sample_code: |
+      ratios = {"A": 0.012, "B": 0.008, "C": 0.020}
+      for k, v in ratios.items():
+          print(f"{k}: {v:.3f}")
+    runnable: true
+    stickman: explain
+    stickman_speech: "items() を覚えると一気に書きやすくなるよ。"
+
+  - kind: exercise
+    title: "ファンドの経費率を取り出そう"
+    prompt: |
+      辞書（dict）はリストと違い「**キーで値を引く**」ためのデータ型です。順番ではなく **意味** で値にアクセスできます。
+
+      ```python
+      fund["name"]            # "AAA Fund"
+      fund["expense_ratio"]   # 0.012
+      ```
+
+      存在しないキーで引くと `KeyError` になります。安全に取りたいときは `fund.get("missing", デフォルト値)` を使います。
+
+      JSON データや CSV の 1 行などはほぼ辞書形式で扱うので、現場では毎日触ります。
+    code_template: |
+      fund = {"name": "AAA Fund", "expense_ratio": 0.012, "aum": 5e9}
+      er = fund[{{slot:key}}]
+      print(round(er, 4))
+    blanks:
+      - id: key
+        placeholder: '"..."'
+        width: 18
+        accept_patterns:
+          - '^"expense_ratio"$'
+          - "^'expense_ratio'$"
+        canonical_answer: '"expense_ratio"'
+        hint: 'キーは文字列なのでクォートで囲む'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.012\s*$'
+      - kind: namespace_check
+        asserts:
+          - "abs(er - 0.012) < 1e-6"
+    hints:
+      - "辞書のキーは文字列ならクォートが必要。"
+      - "`\"expense_ratio\"` を入れてね。"
+    stickman_feedback:
+      correct: "辞書アクセスは現場で毎日使う基本だよ！"
+      wrong_hint1: "キーをクォートで囲もう。"
+      wrong_hint2: '`"expense_ratio"` だね。'
+      wrong_hint3: '答えは `"expense_ratio"`。'
+
+  - kind: exercise
+    title: "items() で全銘柄の経費率を表示しよう"
+    prompt: |
+      辞書を `for` で回すと **キーだけ** が取れます。値も同時に欲しいときは `.items()` を使い **タプルアンパック** で 2 つの変数に展開します。
+
+      ```python
+      for k, v in ratios.items():    # k=キー, v=値
+          ...
+      ```
+
+      これは Python らしい書き方の代表例。`.keys()` だけ、`.values()` だけ、というメソッドもありますが、`.items()` が最も使用頻度が高いです。
+    code_template: |
+      ratios = {"A": 0.012, "B": 0.008, "C": 0.020}
+      for k, v in ratios.{{slot:method}}():
+          print(f"{k}: {v}")
+    blanks:
+      - id: method
+        placeholder: "メソッド名"
+        width: 8
+        accept_patterns:
+          - '^items$'
+        canonical_answer: "items"
+        hint: "key と value を同時に取り出すメソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'A: 0\.012'
+      - kind: stdout_regex
+        pattern: 'B: 0\.008'
+    hints:
+      - "key と value を同時に取り出すのは items。"
+      - "`items` を入れてね。"
+    stickman_feedback:
+      correct: "items() でループするのは Python らしい書き方！"
+      wrong_hint1: "メソッドは items。"
+      wrong_hint2: "`items` だね。"
+      wrong_hint3: "答えは `items`。"

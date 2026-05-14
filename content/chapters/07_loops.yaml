@@ -1,0 +1,121 @@
+id: 7
+title: "ループ (for / while)"
+phase: A
+prerequisites: [6]
+learning_goals:
+  - "for 文でリストを順に処理できる"
+  - "range() で連番を作れる"
+  - "break / continue で制御できる"
+
+pages:
+  - kind: sample
+    title: "for 文と range"
+    markdown: |
+      ## 繰り返し
+      Python では `for 変数 in シーケンス:` でリストや range を順に処理します。
+      `range(n)` は 0 から n-1 までの整数を返します。
+    sample_code: |
+      total = 0
+      for i in range(5):
+          total += i
+      print(total)
+    runnable: true
+    expected_output: "10"
+    stickman: explain
+    stickman_speech: "range(5) は 0,1,2,3,4 を順に返すよ。"
+
+  - kind: exercise
+    title: "リスト全部の合計を計算しよう"
+    prompt: |
+      `for 変数 in シーケンス:` の構文で、リスト・タプル・range などを **1 要素ずつ取り出して処理** できます。
+
+      ```python
+      for r in returns:    # returns の各要素を r に入れて
+          print(r)         # 中身の処理を実行
+      ```
+
+      実際の合計はこの章の例題のように **アキュムレータパターン**（外で 0 初期化、ループ内で `+=`）が定番。後の章で見る `sum()` は内部でこの処理をしているだけです。
+    code_template: |
+      returns = [0.01, -0.005, 0.02, 0.0, -0.01]
+      total = 0
+      for {{slot:var}} in {{slot:iter}}:
+          total += r
+      print(round(total, 4))
+    blanks:
+      - id: var
+        placeholder: "変数名"
+        width: 8
+        accept_patterns:
+          - '^r$'
+        canonical_answer: "r"
+        hint: "ループ変数は `r` とする"
+      - id: iter
+        placeholder: "イテラブル"
+        width: 12
+        accept_patterns:
+          - '^returns$'
+        canonical_answer: "returns"
+        hint: "リスト名 returns をそのまま"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.015\s*$'
+      - kind: namespace_check
+        asserts:
+          - "abs(total - 0.015) < 1e-6"
+    hints:
+      - "`for 変数 in シーケンス:` の形だよ。"
+      - "`r` と `returns` を入れてね。"
+    stickman_feedback:
+      correct: "ループでリストを処理するのは基本中の基本！"
+      wrong_hint1: "ループ変数とリスト名を入れよう。"
+      wrong_hint2: "`r` と `returns` だね。"
+      wrong_hint3: "答えは `r` と `returns`。"
+
+  - kind: exercise
+    title: "勝率（プラスのリターン日数の割合）を計算しよう"
+    prompt: |
+      **勝率（hit ratio）** はファンドの安定性を見る基本指標。`勝った日数 / 全日数` で算出します。
+
+      ループ内で `if` を使うのが定番パターン:
+      ```python
+      win = 0
+      for r in returns:
+          if r > 0:
+              win += 1
+      ```
+
+      ループと条件分岐の組み合わせで「**条件を満たす要素を数える**」処理が書けるようになると、データ分析の基礎が完成します。
+    code_template: |
+      returns = [0.01, -0.02, 0.005, -0.01, 0.012, 0.0, 0.008]
+      win = 0
+      for r in returns:
+          if r {{slot:cond}}:
+              {{slot:body}}
+      print(round(win / len(returns), 4))
+    blanks:
+      - id: cond
+        placeholder: "比較"
+        width: 8
+        accept_patterns:
+          - '^>\s*0$'
+        canonical_answer: "> 0"
+        hint: "正は > 0"
+      - id: body
+        placeholder: "増加"
+        width: 12
+        accept_patterns:
+          - '^win\s*\+=\s*1$'
+          - '^win\s*=\s*win\s*\+\s*1$'
+        canonical_answer: "win += 1"
+        hint: "win に 1 を足す"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.5714\s*$'
+    hints:
+      - "条件が True のとき win に 1 を足す。"
+      - "`> 0` と `win += 1` を使うよ。"
+    stickman_feedback:
+      correct: "勝率はパフォーマンス分析の定番指標だよ！"
+      wrong_hint1: "条件は `> 0`、本体は `win += 1`。"
+      wrong_hint2: "答えは `> 0` と `win += 1`。"
+      wrong_hint3: "答えは `> 0` と `win += 1`。"

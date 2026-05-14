@@ -1,0 +1,141 @@
+id: 17
+title: "期待値・分散・標準偏差"
+phase: C
+prerequisites: [12]
+learning_goals:
+  - "リターン系列から期待値 (E[r]) を計算できる"
+  - "分散・標準偏差を不偏推定 (ddof=1) で計算できる"
+  - "日次→年率の換算 (252 営業日) を理解する"
+
+pages:
+  - kind: sample
+    title: "期待値・分散・標準偏差"
+    markdown: |
+      ## 統計の基本指標
+      | 指標 | 意味 | NumPy |
+      |------|------|-------|
+      | E[r] | リターンの平均（期待値） | `r.mean()` |
+      | Var[r] | リターンのばらつき | `r.var(ddof=1)` |
+      | σ | ばらつきの平方根（標準偏差） | `r.std(ddof=1)` |
+
+      **年率換算**: 期待値は **× 252**、ボラ（σ）は **× √252**。
+      これは独立同分布を仮定したときの「ルートT 則」と呼ばれます。
+    sample_code: |
+      import numpy as np
+      r = np.array([0.001, -0.002, 0.003, -0.001, 0.002, 0.0, 0.001])
+      print("年率リターン:", round(r.mean() * 252, 4))
+      print("年率ボラ:    ", round(r.std(ddof=1) * np.sqrt(252), 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "ボラの年率化は √252 倍が正しいよ！"
+
+  - kind: exercise
+    title: "期待値を年率に換算しよう"
+    prompt: |
+      **期待値（E[r]）** は確率論で「平均的にどんな値が出るか」を表す統計量。日次リターン系列なら `r.mean()` が標本期待値（標本平均）です。
+
+      日次→年率の換算ルール:
+      - **期待値**: × 252（営業日数倍）
+      - **分散**: × 252
+      - **ボラティリティ（σ）**: × √252
+
+      これは「**独立同分布（i.i.d.）の和の分散は分散の和になる**」という確率論の基本性質から来ています。CMA 試験の記述問題でも問われる重要事項。
+    code_template: |
+      import numpy as np
+      r = np.array([0.001, -0.002, 0.003, -0.001, 0.002, 0.0, 0.001])
+      ann_ret = {{slot:expr}}
+      print(round(ann_ret, 4))
+    blanks:
+      - id: expr
+        canonical_answer: "r.mean() * 252"
+        accept_patterns:
+          - '^r\.mean\(\)\s*\*\s*252$'
+          - '^np\.mean\(r\)\s*\*\s*252$'
+          - '^252\s*\*\s*r\.mean\(\)$'
+        hint: "平均 × 252"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.144\s*$'
+    hints:
+      - "日次平均 × 252 営業日 = 年率期待リターン。"
+      - "`r.mean() * 252` だね。"
+    stickman_feedback:
+      correct: "期待値の年率換算、CMA でも頻出！"
+      wrong_hint1: "平均 × 252。"
+      wrong_hint2: "`r.mean() * 252`"
+      wrong_hint3: "`r.mean() * 252`"
+
+  - kind: exercise
+    title: "標準偏差を年率に換算しよう"
+    prompt: |
+      **ボラティリティ（σ）= リスクの尺度**。リターンのばらつきの大きさを示します。年率 σ が 20% なら「±20% くらい振れることが多い」というイメージ。
+
+      **不偏分散（ddof=1）vs 母分散（ddof=0）**:
+      - `r.std()` — デフォルトは ddof=0（母分散）
+      - `r.std(ddof=1)` — n-1 で割る不偏推定（**標本データではこちら**）
+
+      標本（実測データ）から母集団のばらつきを推定するときは ddof=1 が標準。CMA でも実務でも基本的に **ddof=1** を使います。
+    code_template: |
+      import numpy as np
+      r = np.array([0.001, -0.002, 0.003, -0.001, 0.002, 0.0, 0.001])
+      ann_vol = r.std({{slot:ddof}}) * np.{{slot:sqrt}}(252)
+      print(round(ann_vol, 4))
+    blanks:
+      - id: ddof
+        canonical_answer: "ddof=1"
+        accept_patterns: ['^ddof\s*=\s*1$']
+        hint: "不偏推定にする"
+      - id: sqrt
+        canonical_answer: "sqrt"
+        accept_patterns: ['^sqrt$']
+        hint: "平方根の関数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0273\s*$'
+    hints:
+      - "ボラの年率化は √252 倍。"
+      - "不偏推定は ddof=1。"
+      - "`ddof=1` と `sqrt`。"
+    stickman_feedback:
+      correct: "不偏 + √252、これが定番！"
+      wrong_hint1: "`ddof=1` と `sqrt`。"
+      wrong_hint2: "`ddof=1` と `sqrt`。"
+      wrong_hint3: "`ddof=1` と `sqrt`。"
+
+  - kind: exercise
+    title: "リターン要約関数を作ろう"
+    prompt: |
+      期待リターンと年率ボラを返す関数 `summarize` を完成させてください。
+      引数は日次リターン配列、戻り値はタプル `(年率リターン, 年率ボラ)`。
+    code_template: |
+      import numpy as np
+      def summarize({{slot:arg}}):
+          ar = r.mean() * 252
+          av = r.std(ddof=1) * np.sqrt(252)
+          return {{slot:ret}}
+
+      r = np.array([0.001, -0.002, 0.003, -0.001, 0.002, 0.0, 0.001])
+      result = summarize(r)
+      print(round(result[0], 4), round(result[1], 4))
+    blanks:
+      - id: arg
+        canonical_answer: "r"
+        accept_patterns: ['^r$']
+        hint: "引数名は r"
+      - id: ret
+        canonical_answer: "(ar, av)"
+        accept_patterns:
+          - '^\(\s*ar\s*,\s*av\s*\)$'
+          - '^ar\s*,\s*av$'
+        hint: "タプルで 2 つ返す"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.144\s+0\.0273\s*$'
+    hints:
+      - "関数で複数値を返すならタプル `(a, b)`。"
+      - "`r` と `(ar, av)`。"
+    stickman_feedback:
+      correct: "再利用できる関数を作るのがプロの第一歩！"
+      wrong_hint1: "`r` と `(ar, av)`。"
+      wrong_hint2: "`r` と `(ar, av)`。"
+      wrong_hint3: "`r` と `(ar, av)`。"

@@ -1,0 +1,106 @@
+id: 5
+title: "組み込み関数"
+phase: A
+prerequisites: [3]
+learning_goals:
+  - "len / max / min / sum / abs / round が使える"
+  - "round の桁数指定（第 2 引数）を理解する"
+
+pages:
+  - kind: sample
+    title: "Python に最初から入っている関数"
+    markdown: |
+      ## 組み込み関数 (built-in functions)
+      `import` 不要で使える関数たち。
+      | 関数 | 用途 |
+      |------|------|
+      | `len()` | 長さを返す |
+      | `max()` `min()` | 最大・最小 |
+      | `sum()` | 合計 |
+      | `abs()` | 絶対値 |
+      | `round(x, n)` | 小数 n 桁で四捨五入 |
+    sample_code: |
+      returns = [0.01, -0.02, 0.03, -0.005]
+      print(len(returns))
+      print(max(returns), min(returns))
+      print(sum(returns))
+      print(abs(-0.05))
+      print(round(0.123456, 4))
+    runnable: true
+    expected_output: "4\n0.03 -0.02\n0.015\n0.05\n0.1235"
+    stickman: explain
+    stickman_speech: "リスト操作は組み込み関数で大体できるよ！"
+
+  - kind: exercise
+    title: "平均日次リターンを計算しよう"
+    prompt: |
+      **算術平均（mean）** = 合計 ÷ 個数 です。Python では `sum(リスト) / len(リスト)` という最も基本の組み合わせで計算できます。
+
+      後の章で出てくる NumPy なら `r.mean()` の 1 行ですが、まず標準ライブラリだけで書けるようになることが大切。これは **CMA でも金融実務でも最頻出** の計算で、リターンの代表値として使います。
+
+      下の `r` から平均を計算し、4 桁丸めで表示しよう（期待値 `0.0054`）。
+    code_template: |
+      r = [0.01, -0.02, 0.03, -0.005, 0.012]
+      mean = {{slot:s_expr}} / {{slot:n_expr}}
+      print(round(mean, 4))
+    blanks:
+      - id: s_expr
+        placeholder: "合計"
+        width: 12
+        accept_patterns:
+          - '^sum\(r\)$'
+        canonical_answer: "sum(r)"
+        hint: "リストの合計は sum(r)"
+      - id: n_expr
+        placeholder: "個数"
+        width: 12
+        accept_patterns:
+          - '^len\(r\)$'
+        canonical_answer: "len(r)"
+        hint: "リストの長さは len(r)"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0054\s*$'
+      - kind: namespace_check
+        asserts:
+          - "abs(mean - 0.0054) < 1e-6"
+    hints:
+      - "平均 = 合計 ÷ 個数。"
+      - "`sum(r)` と `len(r)` を使うよ。"
+    stickman_feedback:
+      correct: "金融データの分析でよく使う計算だよ！"
+      wrong_hint1: "合計は sum、個数は len。"
+      wrong_hint2: "`sum(r)` と `len(r)` だね。"
+      wrong_hint3: "答えは sum(r) / len(r)。"
+
+  - kind: exercise
+    title: "最大ドローダウン候補を見つけよう"
+    prompt: |
+      **ドローダウン** = 高値からの最大下落幅。リスク管理で必ず見る指標です。
+
+      ここでは入門として「**1 日のうちで最も悪かったリターン**」を `min()` で取り出します。`max()` も同じ要領で「最も良かった日」を取れます。
+
+      `min(リスト)` はリストの最小値、`max(リスト)` は最大値を返します。組み込み関数はとてもシンプルに見えますが、毎日使う基本ツールです。
+    code_template: |
+      r = [0.01, -0.025, 0.012, -0.038, 0.005, -0.015]
+      worst = {{slot:expr}}
+      print(round(worst, 4))
+    blanks:
+      - id: expr
+        placeholder: "式"
+        width: 12
+        accept_patterns:
+          - '^min\(r\)$'
+        canonical_answer: "min(r)"
+        hint: "最小値は min(...)"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^-0\.038\s*$'
+    hints:
+      - "「最も小さい値」を取るには min。"
+      - "`min(r)` を入れてみよう。"
+    stickman_feedback:
+      correct: "損失幅の把握はリスク管理の第一歩！"
+      wrong_hint1: "最小値関数は min。"
+      wrong_hint2: "`min(r)` だね。"
+      wrong_hint3: "答えは `min(r)`。"

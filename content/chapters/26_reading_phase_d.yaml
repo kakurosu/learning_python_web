@@ -1,0 +1,130 @@
+id: 26
+title: "コードを読もう — Phase D ML / DL の総復習"
+phase: D
+prerequisites: [23, 24, 25]
+learning_goals:
+  - "statsmodels の時系列、scikit-learn の機械学習、PyTorch の DL コードを読み解ける"
+
+pages:
+  # ─── Q1: ARIMA（章 20） ─────────────────────────────
+  - kind: reading
+    title: "ARIMA モデルの構築（章 20 復習）"
+    prompt: |
+      下のコードが構築しているのはどんなモデルですか？
+    code: |
+      from statsmodels.tsa.arima.model import ARIMA
+      model = ARIMA(series, order=(1, 1, 1))
+      result = model.fit()
+    code_file_label: "q01.py"
+    choices:
+      - "AR(1) モデル"
+      - "MA(1) モデル"
+      - "ARIMA(1, 1, 1) — 1 次の AR と MA、1 階差分"
+      - "ARCH(1, 1) モデル"
+    correct_index: 2
+    explanation: |
+      `order=(p, d, q)` はそれぞれ AR 次数 / 階差数 / MA 次数。`(1, 1, 1)` は 1 階差分を取った系列に AR(1) と MA(1) を当てはめる **ARIMA(1,1,1)** モデルです。
+
+  # ─── Q2: 時系列の階差（章 20） ──────────────────────
+  - kind: reading
+    title: "リターン系列の生成（章 20 復習）"
+    prompt: |
+      下のコードが計算しているのは何ですか？
+    code: |
+      import pandas as pd
+      price = pd.Series([100, 102, 101, 105])
+      result = price.pct_change().dropna()
+      print(result.tolist())
+    code_file_label: "q02.py"
+    choices:
+      - "[0.02, -0.0098..., 0.0396...]"
+      - "[2, -1, 4]"
+      - "[100, 2, -1, 4]"
+      - "[1.02, 0.99..., 1.04...]"
+    correct_index: 0
+    explanation: |
+      `pct_change()` は前期からの **変化率** `(P_t / P_{t-1}) - 1`。`102/100-1 = 0.02`、`101/102-1 ≈ -0.0098`、`105/101-1 ≈ 0.0396`。`dropna()` で先頭の NaN を除去します。
+
+  # ─── Q3: scikit-learn フィット（章 21） ─────────────
+  - kind: reading
+    title: "線形回帰の学習（章 21 復習）"
+    prompt: |
+      下のコードを読んで、`coef_` が表すものとして正しいものを選んでください。
+    code: |
+      from sklearn.linear_model import LinearRegression
+      model = LinearRegression()
+      model.fit(X_train, y_train)
+      print(model.coef_)
+    code_file_label: "q03.py"
+    choices:
+      - "回帰の切片（intercept）"
+      - "回帰の傾き（係数ベクトル）"
+      - "決定係数 R²"
+      - "残差ベクトル"
+    correct_index: 1
+    explanation: |
+      `LinearRegression.coef_` は各説明変数に対する **傾き（係数）** を返します。切片は `intercept_`、R² は `score(X, y)` で取得します。
+
+  # ─── Q4: train/test split（章 21） ─────────────────
+  - kind: reading
+    title: "データ分割（章 21 復習）"
+    prompt: |
+      下のコードについて、`X_test` の役割として正しいものを選んでください。
+    code: |
+      from sklearn.model_selection import train_test_split
+      X_train, X_test, y_train, y_test = train_test_split(
+          X, y, test_size=0.2, random_state=0
+      )
+    code_file_label: "q04.py"
+    choices:
+      - "モデルのパラメータを学習するためのデータ"
+      - "モデル学習に使われず、汎化性能を評価するためのデータ（全体の 20%）"
+      - "ハイパーパラメータをチューニングするためのバリデーションデータ"
+      - "外れ値を除去するための比較データ"
+    correct_index: 1
+    explanation: |
+      `test_size=0.2` で全体の 20% がテストセットに切り分けられます。これは学習時には使わず、未知データでの予測性能（汎化性能）を測るために使います。
+
+  # ─── Q5: PyTorch オプティマイザ（章 22） ────────────
+  - kind: reading
+    title: "学習ステップの流れ（章 22 復習）"
+    prompt: |
+      下のコードについて、`optimizer.step()` が行うこととして正しいものを選んでください。
+    code: |
+      import torch
+      pred = model(X)
+      loss = loss_fn(pred, y)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+    code_file_label: "q05.py"
+    choices:
+      - "損失を計算する"
+      - "勾配を計算する（自動微分）"
+      - "計算済みの勾配を使ってパラメータを更新する"
+      - "勾配をゼロに初期化する"
+    correct_index: 2
+    explanation: |
+      `loss.backward()` で勾配を計算し、`optimizer.step()` がその勾配に学習率を掛けてパラメータを更新します。`zero_grad()` は前回の勾配のリセットです。
+
+  # ─── Q6: PyTorch MLP（章 22） ───────────────────────
+  - kind: reading
+    title: "ニューラルネットの構造（章 22 復習）"
+    prompt: |
+      下のコードが定義するモデルとして正しいものを選んでください。
+    code: |
+      import torch.nn as nn
+      model = nn.Sequential(
+          nn.Linear(10, 32),
+          nn.ReLU(),
+          nn.Linear(32, 1),
+      )
+    code_file_label: "q06.py"
+    choices:
+      - "10 次元入力、32 次元隠れ層 (ReLU)、1 次元出力の 1 層 MLP"
+      - "32 次元入力、10 次元出力の浅い MLP"
+      - "2 層の畳み込みニューラルネット"
+      - "10 個のニューロンを持つ単純パーセプトロン"
+    correct_index: 0
+    explanation: |
+      入力 10 → 全結合 32 → ReLU → 全結合 1。中間層が 1 つの **1 層 MLP（多層パーセプトロン）** です。回帰タスクで広く使われる構造です。

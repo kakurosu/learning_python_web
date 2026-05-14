@@ -1,0 +1,175 @@
+id: 21
+title: "モンテカルロシミュレーション"
+phase: C
+prerequisites: [17, 20]
+learning_goals:
+  - "GBM (幾何ブラウン運動) で価格パスを生成できる"
+  - "ヨーロピアンコールオプションを MC で評価できる"
+  - "VaR (95%) を MC で計算できる"
+
+pages:
+  - kind: sample
+    title: "Geometric Brownian Motion"
+    markdown: |
+      ## GBM
+      株価の代表的なモデル:
+
+      ```
+      S_T = S_0 · exp((μ − σ²/2) · T + σ · √T · Z)    # Z ~ N(0,1)
+      ```
+
+      たくさんの Z をサンプリング → S_T の分布が得られる → ペイオフを平均 → 割引でオプション価格。
+    sample_code: |
+      import numpy as np
+      np.random.seed(42)
+      import matplotlib.pyplot as plt
+      S0, mu, sigma_v, T, steps, paths = 100, 0.05, 0.20, 1.0, 252, 50
+      dt = T / steps
+      Z = np.random.standard_normal((steps, paths))
+      log_returns = (mu - 0.5 * sigma_v**2) * dt + sigma_v * np.sqrt(dt) * Z
+      St = S0 * np.exp(np.cumsum(log_returns, axis=0))
+      St = np.vstack([np.full((1, paths), S0), St])
+
+      print(f"末値の平均: {St[-1].mean():.2f}, 標準偏差: {St[-1].std():.2f}")
+
+      plt.figure(figsize=(7, 3.2))
+      plt.plot(St, color="#DC2626", alpha=0.25, linewidth=0.8)
+      plt.plot(St.mean(axis=1), color="#0A0A0A", linewidth=2, label="mean")
+      plt.title(f"GBM — {paths} sample paths")
+      plt.xlabel("trading day")
+      plt.ylabel("price")
+      plt.legend()
+      plt.tight_layout()
+      plt.show()
+    runnable: true
+    stickman: explain
+    stickman_speech: "10 万本のパスから一気に分布が描けるよ！"
+
+  - kind: sample
+    title: "ヨーロピアンコールオプションの MC 評価"
+    markdown: |
+      ## コール価格 = e^(-rT) · E[max(S_T − K, 0)]
+      満期で行使される額の期待値を割り引いたもの。
+      Black-Scholes の解析解と十分近くなれば実装は OK。
+    sample_code: |
+      import numpy as np
+      np.random.seed(42)
+      S0, K, r, sigma_v, T = 100, 100, 0.05, 0.20, 1.0
+      n = 100000
+      Z = np.random.standard_normal(n)
+      ST = S0 * np.exp((r - 0.5 * sigma_v**2) * T + sigma_v * np.sqrt(T) * Z)
+      payoff = np.maximum(ST - K, 0)
+      price = np.exp(-r * T) * payoff.mean()
+      print("MC コール価格:", round(price, 2))
+    runnable: true
+    stickman: explain
+    stickman_speech: "MC は解析解が無いオプションでも使えるのが強み！"
+
+  - kind: exercise
+    title: "GBM で満期株価を生成しよう"
+    prompt: |
+      `(μ − σ²/2)·T + σ·√T·Z` の指数を計算する式を完成させてください。
+    code_template: |
+      import numpy as np
+      np.random.seed(42)
+      S0, mu, sigma_v, T, n = 100, 0.05, 0.20, 1.0, 100000
+      Z = np.random.standard_normal(n)
+      ST = S0 * np.exp({{slot:drift}} + sigma_v * np.sqrt(T) * Z)
+      print(round(float(ST.mean()), 2))
+    blanks:
+      - id: drift
+        canonical_answer: "(mu - 0.5 * sigma_v**2) * T"
+        accept_patterns:
+          - '^\(mu\s*-\s*0\.5\s*\*\s*sigma_v\s*\*\*\s*2\)\s*\*\s*T$'
+          - '^\(mu\s*-\s*sigma_v\s*\*\*\s*2\s*/\s*2\)\s*\*\s*T$'
+        hint: "(μ − σ²/2) × T"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^10[5-6]\.\d+\s*$'
+    hints:
+      - "ドリフト項は `(μ − σ²/2)·T`。"
+      - "`(mu - 0.5 * sigma_v**2) * T`"
+    stickman_feedback:
+      correct: "GBM のキモはドリフト補正項！"
+      wrong_hint1: "`(mu - 0.5 * sigma_v**2) * T`"
+      wrong_hint2: "`(mu - 0.5 * sigma_v**2) * T`"
+      wrong_hint3: "`(mu - 0.5 * sigma_v**2) * T`"
+
+  - kind: exercise
+    title: "ペイオフから割引現在価値を計算しよう"
+    prompt: |
+      コールオプションのペイオフ `payoff = max(S_T − K, 0)` の期待値を **割引** して現在価値にしてください。
+    code_template: |
+      import numpy as np
+      np.random.seed(42)
+      S0, K, r, sigma_v, T = 100, 100, 0.05, 0.20, 1.0
+      n = 100000
+      Z = np.random.standard_normal(n)
+      ST = S0 * np.exp((r - 0.5 * sigma_v**2) * T + sigma_v * np.sqrt(T) * Z)
+      payoff = np.{{slot:fn}}(ST - K, 0)
+      price = np.{{slot:disc_fn}}({{slot:disc_arg}}) * payoff.mean()
+      print(round(float(price), 2))
+    blanks:
+      - id: fn
+        canonical_answer: "maximum"
+        accept_patterns: ['^maximum$']
+        hint: "要素ごとに大きい方を返す関数"
+      - id: disc_fn
+        canonical_answer: "exp"
+        accept_patterns: ['^exp$']
+        hint: "指数関数"
+      - id: disc_arg
+        canonical_answer: "-r * T"
+        accept_patterns:
+          - '^-r\s*\*\s*T$'
+          - '^-1\s*\*\s*r\s*\*\s*T$'
+        hint: "割引指数: -rT"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^10\.4[0-9]\s*$'
+    hints:
+      - "max は要素ごとなら `np.maximum`。"
+      - "割引は `np.exp(-r * T)`。"
+    stickman_feedback:
+      correct: "Black-Scholes 解析解 (≈10.45) とほぼ一致するね！"
+      wrong_hint1: "`maximum`, `exp`, `-r * T`。"
+      wrong_hint2: "`maximum`, `exp`, `-r * T`。"
+      wrong_hint3: "`maximum`, `exp`, `-r * T`。"
+
+  - kind: exercise
+    title: "VaR (95%) を計算しよう"
+    prompt: |
+      正規乱数で 1 万個の P&L を生成し、**5% 分位点（左裾の損失）の絶対値** を VaR とします。
+      `np.percentile(arr, q)` で q% 分位点を取れます。
+    code_template: |
+      import numpy as np
+      np.random.seed(0)
+      pnl = np.random.normal(0, 1_000_000, 10000)   # 平均0、σ=100万円
+      var95 = -np.{{slot:fn}}(pnl, {{slot:q}})
+      print(int(round(float(var95), -3)))
+    blanks:
+      - id: fn
+        canonical_answer: "percentile"
+        accept_patterns:
+          - '^percentile$'
+          - '^quantile$'
+        hint: "分位点"
+      - id: q
+        canonical_answer: "5"
+        accept_patterns:
+          - '^5$'
+        hint: "5% (percentile なので 5)"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^16[0-9]{5}\s*$'
+      - kind: namespace_check
+        asserts:
+          - "var95 > 0"
+    hints:
+      - "5% 分位点を取って符号反転。"
+      - "`percentile` と `5`。"
+    stickman_feedback:
+      correct: "VaR はリスク管理の標準ツール！"
+      wrong_hint1: "`percentile` と `5`。"
+      wrong_hint2: "`percentile` と `5`。"
+      wrong_hint3: "`percentile` と `5`。"

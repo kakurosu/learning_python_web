@@ -1,0 +1,168 @@
+id: 24
+title: "機械学習入門 (scikit-learn)"
+phase: D
+prerequisites: [12, 15]
+learning_goals:
+  - "train / test split で過学習を防ぐ理由を理解する"
+  - "LinearRegression で回帰モデルを訓練できる"
+  - "RandomForest で非線形回帰を試せる"
+  - "MSE / R² で評価できる"
+
+pages:
+  - kind: sample
+    title: "scikit-learn の最小ワークフロー"
+    markdown: |
+      ## fit / predict / score
+      scikit-learn のすべてのモデルは同じ API:
+      - `model.fit(X, y)` で訓練
+      - `model.predict(X)` で予測
+      - 評価は `metrics` 内の関数 (mse, r2_score 等)
+    sample_code: |
+      from sklearn.linear_model import LinearRegression
+      from sklearn.metrics import r2_score
+      import numpy as np
+      X = np.array([[1, 2], [2, 3], [3, 5], [4, 7], [5, 11]])
+      y = np.array([3, 5, 7, 9, 11])
+      model = LinearRegression()
+      model.fit(X, y)
+      print("係数:", model.coef_.round(3))
+      print("R^2:", round(r2_score(y, model.predict(X)), 3))
+    runnable: true
+    expected_output: "係数: [2. 0.]\nR^2: 1.0"
+    stickman: explain
+    stickman_speech: "fit と predict、これだけで動くのが scikit-learn の強み。"
+
+  - kind: sample
+    title: "train / test split + 回帰直線を可視化"
+    markdown: |
+      ## なぜ訓練データで評価してはいけないか
+      モデルは訓練データに合わせ込みすぎる（過学習）と、未知データで失敗します。
+      `train_test_split` で データを分けて **テストデータの精度** を評価しましょう。
+      実行すると、データ点と回帰直線がプロットされます。
+    sample_code: |
+      import numpy as np
+      import matplotlib.pyplot as plt
+      from sklearn.linear_model import LinearRegression
+      from sklearn.model_selection import train_test_split
+      from sklearn.metrics import r2_score
+
+      np.random.seed(0)
+      X = np.linspace(0, 10, 80).reshape(-1, 1)
+      y = 2.0 * X.ravel() + 1 + np.random.normal(0, 1.5, 80)
+
+      X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.25, random_state=0)
+      model = LinearRegression().fit(X_tr, y_tr)
+      print(f"訓練 R^2: {r2_score(y_tr, model.predict(X_tr)):.3f}")
+      print(f"テスト R^2: {r2_score(y_te, model.predict(X_te)):.3f}")
+      print(f"係数: {model.coef_[0]:.3f}, 切片: {model.intercept_:.3f}")
+
+      x_line = np.linspace(0, 10, 100).reshape(-1, 1)
+      plt.figure(figsize=(7, 3.2))
+      plt.scatter(X_tr, y_tr, color="#0A0A0A", s=15, label="train")
+      plt.scatter(X_te, y_te, color="#DC2626", s=20, label="test")
+      plt.plot(x_line, model.predict(x_line), color="#DC2626", linewidth=2, label="fit")
+      plt.legend()
+      plt.title("Linear Regression Fit")
+      plt.tight_layout()
+      plt.show()
+    runnable: true
+    stickman: explain
+    stickman_speech: "テストデータで評価する習慣をつけよう。"
+
+  - kind: exercise
+    title: "線形回帰モデルを訓練しよう"
+    prompt: |
+      `LinearRegression` を使って `X, y` を訓練し、係数を表示するコードを完成させてください。
+    code_template: |
+      import numpy as np
+      from sklearn.linear_model import LinearRegression
+      X = np.array([[1, 2], [2, 3], [3, 5], [4, 7], [5, 11]])
+      y = np.array([3, 5, 7, 9, 11])
+      model = LinearRegression()
+      model.{{slot:method}}(X, y)
+      print(model.coef_.round(3))
+    blanks:
+      - id: method
+        canonical_answer: "fit"
+        accept_patterns: ['^fit$']
+        hint: "scikit-learn の訓練メソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\[2\.\s*0\.\]'
+    hints:
+      - "訓練は `fit`。"
+      - "`fit`"
+    stickman_feedback:
+      correct: "scikit-learn の API は全モデル共通。"
+      wrong_hint1: "`fit`"
+      wrong_hint2: "`fit`"
+      wrong_hint3: "`fit`"
+
+  - kind: exercise
+    title: "train / test split を使おう"
+    prompt: |
+      データを **テスト 20%** で分割してください。再現性のため `random_state=0`。
+    code_template: |
+      import numpy as np
+      from sklearn.datasets import make_regression
+      from sklearn.model_selection import {{slot:fn}}
+      X, y = make_regression(n_samples=100, n_features=3, noise=10, random_state=0)
+      X_tr, X_te, y_tr, y_te = {{slot:fn}}(X, y, test_size={{slot:size}}, random_state=0)
+      print(X_tr.shape, X_te.shape)
+    blanks:
+      - id: fn
+        canonical_answer: "train_test_split"
+        accept_patterns: ['^train_test_split$']
+        hint: "split 関数"
+      - id: size
+        canonical_answer: "0.2"
+        accept_patterns: ['^0\.2$']
+        hint: "20% は 0.2"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\(80, 3\) \(20, 3\)'
+    hints:
+      - "`train_test_split` と `0.2`。"
+      - "`train_test_split` と `0.2`。"
+    stickman_feedback:
+      correct: "テスト分割は実務で必ず使う基本手順。"
+      wrong_hint1: "`train_test_split` と `0.2`。"
+      wrong_hint2: "`train_test_split` と `0.2`。"
+      wrong_hint3: "`train_test_split` と `0.2`。"
+
+  - kind: exercise
+    title: "Random Forest で非線形回帰"
+    prompt: |
+      `RandomForestRegressor` を訓練して、テストの R² を計算してください。
+    code_template: |
+      import numpy as np
+      from sklearn.datasets import make_regression
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import {{slot:cls}}
+      from sklearn.metrics import r2_score
+      X, y = make_regression(n_samples=200, n_features=5, noise=10, random_state=0)
+      X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = {{slot:cls}}(n_estimators=50, random_state=0)
+      model.fit(X_tr, y_tr)
+      score = r2_score(y_te, model.{{slot:method}}(X_te))
+      print(round(float(score), 2))
+    blanks:
+      - id: cls
+        canonical_answer: "RandomForestRegressor"
+        accept_patterns: ['^RandomForestRegressor$']
+        hint: "ランダムフォレスト回帰のクラス"
+      - id: method
+        canonical_answer: "predict"
+        accept_patterns: ['^predict$']
+        hint: "予測メソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.\d+\s*$'
+    hints:
+      - "クラス名は RandomForestRegressor、メソッドは predict。"
+      - "`RandomForestRegressor` と `predict`。"
+    stickman_feedback:
+      correct: "アンサンブル学習、強力。"
+      wrong_hint1: "`RandomForestRegressor` と `predict`。"
+      wrong_hint2: "`RandomForestRegressor` と `predict`。"
+      wrong_hint3: "`RandomForestRegressor` と `predict`。"

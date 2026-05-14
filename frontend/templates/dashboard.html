@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% block title %}Dashboard · Study Python for Finance{% endblock %}
+{% block content %}
+  <h1>こんにちは！</h1>
+  <p class="lead">Web UI 版（pywebview + FastAPI）の最小起動テストです。サイドバーのナビは現在ダッシュボードのみ実装。</p>
+
+  <div id="chapter-summary"
+       style="border: 1px solid var(--line); padding: 16px; max-width: 720px;">
+    <strong>章サマリ</strong>
+    <div id="chapter-summary-body" style="color: var(--ink3); margin-top: 8px;">
+      読み込み中...
+    </div>
+  </div>
+
+  <script>
+    fetch("/api/chapters")
+      .then(r => r.json())
+      .then(data => {
+        const body = document.getElementById("chapter-summary-body");
+        const done = data.filter(c => c.status === "completed").length;
+        const inprog = data.filter(c => c.status === "in_progress").length;
+        const phases = new Set(data.map(c => c.phase));
+        body.innerHTML =
+          `${data.length} 章 / ${phases.size} Phase ` +
+          `(完了 ${done} · 進行中 ${inprog})`;
+      })
+      .catch(err => {
+        document.getElementById("chapter-summary-body").innerText =
+          "API 呼び出しに失敗: " + err;
+      });
+  </script>
+{% endblock %}

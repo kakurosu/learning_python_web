@@ -1,0 +1,150 @@
+id: 23
+title: "時系列モデル"
+phase: D
+prerequisites: [15, 17]
+learning_goals:
+  - "時系列データの自己相関を観察できる"
+  - "statsmodels で AR / ARMA モデルを推定できる"
+  - "残差の白色化を理解する"
+
+pages:
+  - kind: sample
+    title: "AR(1) モデル"
+    markdown: |
+      ## 自己回帰モデル
+      `y_t = φ · y_{t-1} + ε_t` の形のモデル。
+      φ が 1 に近いほど、過去の値を強く引きずる（ランダムウォークに近い）。
+      statsmodels で簡単に推定できます。
+    sample_code: |
+      import numpy as np
+      from statsmodels.tsa.arima_process import arma_generate_sample
+      np.random.seed(42)
+      ar_params = np.array([1, -0.7])    # φ = 0.7
+      ma_params = np.array([1])
+      y = arma_generate_sample(ar_params, ma_params, nsample=100)
+      print("生成されたパス [先頭 5]:", y[:5].round(3))
+      print("平均:", round(y.mean(), 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "AR(1) は時系列の入門に最適。"
+
+  - kind: sample
+    title: "ACF で自己相関を見る"
+    markdown: |
+      自己相関関数 (ACF) は「時刻 t の値と t-k の値の相関」を、
+      ラグ k ごとに計算したもの。AR(1) なら指数的に減衰します。
+    sample_code: |
+      import numpy as np
+      from statsmodels.tsa.stattools import acf
+      np.random.seed(0)
+      y = np.random.normal(0, 1, 200)
+      # AR(1) っぽく作る
+      for i in range(1, len(y)):
+          y[i] = 0.7 * y[i-1] + np.random.normal()
+      lags = acf(y, nlags=5)
+      print(lags.round(3))
+    runnable: true
+    stickman: explain
+    stickman_speech: "ラグ 0 が 1.0、それ以降が小さくなっていけば良いモデル。"
+
+  - kind: exercise
+    title: "AR(1) 系列を生成しよう"
+    prompt: |
+      `arma_generate_sample` を使って **φ=0.5** の AR(1) サンプルを 200 個生成してください。
+      AR 多項式 `[1, -φ]` の指定がポイントです。
+    code_template: |
+      import numpy as np
+      from statsmodels.tsa.arima_process import arma_generate_sample
+      np.random.seed(0)
+      ar_params = np.array([1, {{slot:phi}}])
+      y = arma_generate_sample(ar_params, np.array([1]), nsample=200)
+      print(round(float(y.std()), 3))
+    blanks:
+      - id: phi
+        canonical_answer: "-0.5"
+        accept_patterns:
+          - '^-0\.5$'
+          - '^-\s*0\.5$'
+        hint: "AR 多項式は [1, -φ] の形なので、φ=0.5 なら -0.5"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^1\.\d+\s*$'
+    hints:
+      - "AR 多項式の符号は逆になる。"
+      - "`-0.5` を入れる。"
+    stickman_feedback:
+      correct: "AR の係数指定、これでマスター。"
+      wrong_hint1: "符号反転に注意。"
+      wrong_hint2: "`-0.5`"
+      wrong_hint3: "`-0.5`"
+
+  - kind: exercise
+    title: "ACF を計算しよう"
+    prompt: |
+      生成した系列 `y` の自己相関を **ラグ 5** まで計算してください。
+    code_template: |
+      import numpy as np
+      from statsmodels.tsa.stattools import {{slot:fn}}
+      np.random.seed(0)
+      y = np.random.normal(0, 1, 200)
+      for i in range(1, len(y)):
+          y[i] = 0.7 * y[i-1] + np.random.normal()
+      vals = {{slot:fn}}(y, nlags={{slot:lag}})
+      print(len(vals))
+    blanks:
+      - id: fn
+        canonical_answer: "acf"
+        accept_patterns: ['^acf$']
+        hint: "自己相関関数"
+      - id: lag
+        canonical_answer: "5"
+        accept_patterns: ['^5$']
+        hint: "ラグ 5"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^6\s*$'
+    hints:
+      - "関数名 + ラグ数 5。"
+      - "`acf` と `5`。"
+    stickman_feedback:
+      correct: "ACF はモデル選択の重要な指標。"
+      wrong_hint1: "関数名は acf。"
+      wrong_hint2: "`acf` と `5`。"
+      wrong_hint3: "`acf` と `5`。"
+
+  - kind: exercise
+    title: "ARIMA でモデル推定しよう"
+    prompt: |
+      AR(1) の系列 `y` から `ARIMA(1, 0, 0)` を推定してください。
+      `order=(p, d, q)` の `p=1, d=0, q=0` が AR(1) を意味します。
+    code_template: |
+      import numpy as np
+      from statsmodels.tsa.arima.model import ARIMA
+      np.random.seed(0)
+      y = np.random.normal(0, 1, 200)
+      for i in range(1, len(y)):
+          y[i] = 0.7 * y[i-1] + np.random.normal()
+      model = ARIMA(y, order=({{slot:p}}, {{slot:d}}, {{slot:q}}))
+      result = model.fit()
+      print("AR(1) 係数:", round(float(result.params[0]), 2))
+    blanks:
+      - id: p
+        canonical_answer: "1"
+        accept_patterns: ['^1$']
+      - id: d
+        canonical_answer: "0"
+        accept_patterns: ['^0$']
+      - id: q
+        canonical_answer: "0"
+        accept_patterns: ['^0$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'AR\(1\) 係数:'
+    hints:
+      - "AR(1) は (p,d,q) = (1, 0, 0)。"
+      - "`1`, `0`, `0`。"
+    stickman_feedback:
+      correct: "ARIMA の order を決めれば、ほぼ呼ぶだけ。"
+      wrong_hint1: "(1, 0, 0) を指定。"
+      wrong_hint2: "`1`, `0`, `0`。"
+      wrong_hint3: "`1`, `0`, `0`。"

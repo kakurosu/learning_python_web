@@ -1,0 +1,143 @@
+id: 31
+title: "自動操作 (PyAutoGUI / Playwright)"
+phase: F
+prerequisites: [10]
+learning_goals:
+  - "PyAutoGUI でキー入力・スクリーンショットの API 形を理解する"
+  - "Playwright で page.goto / page.click / page.fill を組み立てる"
+  - "FAILSAFE / ヘッドレスモードで安全に実行する習慣を身につける"
+
+pages:
+  - kind: sample
+    title: "自動操作のリスクと安全装置"
+    markdown: |
+      ## 自動化は両刃の剣
+      自動操作は **強力だが暴走するとシステムを壊す** こともあります。
+      必ず以下を守りましょう。
+
+      - PyAutoGUI: `pyautogui.FAILSAFE = True` を **必ず有効** に。
+        マウスを画面端に動かすだけで強制中断できます。
+      - Playwright: 開発時は **ヘッドレスモード** で動作確認を。
+      - 対象は自分が管理するアプリ・サンプルサイトのみ。
+        他人の運営するサイトに不正アクセスしない。
+
+      この章では実際にマウスを動かさず、API の **コード形** だけ確認します。
+    sample_code: |
+      # FAILSAFE がデフォルトで True であることだけを確認（実行はしない）
+      import pyautogui
+      print("FAILSAFE:", pyautogui.FAILSAFE)
+    runnable: true
+    stickman: explain
+    stickman_speech: "暴走対策は、自動化の必須リテラシー。"
+
+  - kind: sample
+    title: "Playwright の基本コード形"
+    markdown: |
+      ## Playwright Sync API
+      ```python
+      from playwright.sync_api import sync_playwright
+      with sync_playwright() as p:
+          browser = p.chromium.launch(headless=True)
+          page = browser.new_page()
+          page.goto("https://example.com")
+          page.fill("#username", "alice")
+          page.click("button[type=submit]")
+          browser.close()
+      ```
+      この章ではコードの **組み立て** に焦点を当てます。
+    sample_code: |
+      template = """
+      from playwright.sync_api import sync_playwright
+      with sync_playwright() as p:
+          browser = p.chromium.launch(headless=True)
+          page = browser.new_page()
+          page.goto(URL)
+          browser.close()
+      """
+      print(len(template.splitlines()), "行のテンプレート")
+    runnable: true
+    stickman: explain
+    stickman_speech: "page.goto / page.click / page.fill — まずはこの 3 つ。"
+
+  - kind: exercise
+    title: "PyAutoGUI の FAILSAFE を有効化"
+    prompt: |
+      `pyautogui.FAILSAFE = ...` で安全装置を有効にしてください。
+    code_template: |
+      import pyautogui
+      pyautogui.FAILSAFE = {{slot:flag}}
+      print(pyautogui.FAILSAFE)
+    blanks:
+      - id: flag
+        canonical_answer: "True"
+        accept_patterns: ['^True$']
+        hint: "Bool で True"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^True\s*$'
+    hints:
+      - "`True`"
+      - "`True`"
+    stickman_feedback:
+      correct: "暴走対策、これでひと安心。"
+      wrong_hint1: "`True`"
+      wrong_hint2: "`True`"
+      wrong_hint3: "`True`"
+
+  - kind: exercise
+    title: "Playwright の launch オプション"
+    prompt: |
+      開発中は **ヘッドレスモード** でブラウザを起動します。`headless=True` を指定するコードを完成させてください。
+    code_template: |
+      def build_launch_call(headless_flag):
+          return f"p.chromium.launch(headless={{slot:val}})"
+
+      print(build_launch_call(True))
+    blanks:
+      - id: val
+        canonical_answer: "headless_flag"
+        accept_patterns:
+          - '^headless_flag$'
+          - '^True$'
+        hint: "引数の値そのまま"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'launch\(headless='
+    hints:
+      - "引数 headless_flag をそのまま入れる。"
+      - "`headless_flag`"
+    stickman_feedback:
+      correct: "ヘッドレスは CI / 自動テストで必須。"
+      wrong_hint1: "`headless_flag`"
+      wrong_hint2: "`headless_flag`"
+      wrong_hint3: "`headless_flag`"
+
+  - kind: exercise
+    title: "Playwright で URL を開くコード"
+    prompt: |
+      関数 `goto_url` の中で **page オブジェクトのメソッド** を呼んで URL に遷移させてください。
+    code_template: |
+      def goto_url(page, url):
+          page.{{slot:fn}}(url)
+
+      class FakePage:
+          def goto(self, u):
+              print("visiting:", u)
+
+      goto_url(FakePage(), "https://example.com")
+    blanks:
+      - id: fn
+        canonical_answer: "goto"
+        accept_patterns: ['^goto$']
+        hint: "URL に遷移するメソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'visiting: https://example\.com'
+    hints:
+      - "`goto`"
+      - "`goto`"
+    stickman_feedback:
+      correct: "Playwright は宣言的で読みやすい。"
+      wrong_hint1: "`goto`"
+      wrong_hint2: "`goto`"
+      wrong_hint3: "`goto`"

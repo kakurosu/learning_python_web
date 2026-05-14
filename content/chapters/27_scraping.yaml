@@ -1,0 +1,137 @@
+id: 27
+title: "Web スクレイピング (requests + BeautifulSoup)"
+phase: E
+prerequisites: [10]
+learning_goals:
+  - "requests で HTTP リクエストを送れる"
+  - "BeautifulSoup で HTML をパースして要素を抽出できる"
+  - "利用規約・robots.txt の遵守の必要性を理解する"
+
+pages:
+  - kind: sample
+    title: "スクレイピングの注意"
+    markdown: |
+      ## スクレイピング前に
+      外部サイトを対象にする場合は、必ず:
+
+      1. **サイトの利用規約** を確認する。
+      2. **robots.txt** を確認する。
+      3. リクエスト間隔を **最低 1 秒** 空ける。
+      4. User-Agent を適切に設定する。
+
+      この章では **ローカル HTML ファイル** (`data/sample_finance_news.html`) のみを対象に練習します。
+      実サイトを叩く演習はありません。
+    sample_code: |
+      from pathlib import Path
+      html = Path("data/sample_finance_news.html").read_text(encoding="utf-8")
+      print(len(html), "文字")
+    runnable: true
+    stickman: explain
+    stickman_speech: "公開サイトをスクレイピングする前に、必ず利用規約を読もう。"
+
+  - kind: sample
+    title: "BeautifulSoup の基本"
+    markdown: |
+      ## select で CSS セレクタ
+      `BeautifulSoup` は HTML を木構造として扱えるライブラリ。
+      `.select(セレクタ)` で CSS セレクタ風の検索ができます。
+    sample_code: |
+      from pathlib import Path
+      from bs4 import BeautifulSoup
+      html = Path("data/sample_finance_news.html").read_text(encoding="utf-8")
+      soup = BeautifulSoup(html, "html.parser")
+      titles = [a.text for a in soup.select("a.title")]
+      for t in titles:
+          print(t)
+    runnable: true
+    stickman: explain
+    stickman_speech: "select は CSS セレクタが使えて便利。"
+
+  - kind: exercise
+    title: "HTML ファイルを読み込もう"
+    prompt: |
+      `data/sample_finance_news.html` を文字列で読み込んでください。
+    code_template: |
+      from pathlib import Path
+      html = Path("data/sample_finance_news.html").{{slot:method}}(encoding="utf-8")
+      print(len(html) > 0)
+    blanks:
+      - id: method
+        canonical_answer: "read_text"
+        accept_patterns: ['^read_text$']
+        hint: "テキスト読み込みメソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^True\s*$'
+    hints:
+      - "`read_text`"
+      - "`read_text`"
+    stickman_feedback:
+      correct: "Path 経由のファイル読み込みは現代的な書き方。"
+      wrong_hint1: "`read_text`"
+      wrong_hint2: "`read_text`"
+      wrong_hint3: "`read_text`"
+
+  - kind: exercise
+    title: "ニュースタイトルを全部取り出そう"
+    prompt: |
+      `BeautifulSoup` で HTML をパースし、`a.title` クラスの **全テキスト** をリストに集めてください。
+    code_template: |
+      from pathlib import Path
+      from bs4 import BeautifulSoup
+      html = Path("data/sample_finance_news.html").read_text(encoding="utf-8")
+      soup = BeautifulSoup(html, "html.parser")
+      titles = [a.text for a in soup.{{slot:fn}}({{slot:sel}})]
+      print(len(titles))
+    blanks:
+      - id: fn
+        canonical_answer: "select"
+        accept_patterns: ['^select$']
+        hint: "CSS セレクタで取得"
+      - id: sel
+        canonical_answer: '"a.title"'
+        accept_patterns:
+          - '^"a\.title"$'
+          - "^'a\\.title'$"
+        hint: "a 要素で class=title"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^5\s*$'
+    hints:
+      - "`select` と `\"a.title\"`。"
+      - '`select` と `"a.title"`。'
+    stickman_feedback:
+      correct: "CSS セレクタ、便利。"
+      wrong_hint1: '`select` と `"a.title"`。'
+      wrong_hint2: '`select` と `"a.title"`。'
+      wrong_hint3: '`select` と `"a.title"`。'
+
+  - kind: exercise
+    title: "為替レートテーブルから USD/JPY を抜こう"
+    prompt: |
+      `tr` 行を全部取り出し、最初の 2 行目（ヘッダ除く）から **USD/JPY の終値** を抽出してください。
+      シンプルに `find_all` で要素を辿る方法を使います。
+    code_template: |
+      from pathlib import Path
+      from bs4 import BeautifulSoup
+      html = Path("data/sample_finance_news.html").read_text(encoding="utf-8")
+      soup = BeautifulSoup(html, "html.parser")
+      rows = soup.find_all("tr")
+      cells = rows[1].{{slot:fn}}("td")
+      print(cells[1].text)
+    blanks:
+      - id: fn
+        canonical_answer: "find_all"
+        accept_patterns: ['^find_all$']
+        hint: "全要素を取り出すメソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^152\.30\s*$'
+    hints:
+      - "`find_all`"
+      - "`find_all`"
+    stickman_feedback:
+      correct: "テーブルパース、これでOK。"
+      wrong_hint1: "`find_all`"
+      wrong_hint2: "`find_all`"
+      wrong_hint3: "`find_all`"

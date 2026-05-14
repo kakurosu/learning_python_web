@@ -1,0 +1,243 @@
+id: phase_b_test
+title: "Phase B 実力テスト"
+description: "数値・データライブラリ（章 11-14）の実力テスト。10 問・制限時間 30 分・合格基準 60%。"
+phase: B
+time_limit_minutes: 30
+pass_score: 0.6
+
+questions:
+  # Q1 — np.array
+  - kind: exercise
+    title: "Q1. NumPy 配列を作る"
+    prompt: "`[1, 2, 3]` から NumPy 配列を作ってください。"
+    code_template: |
+      import numpy as np
+      a = np.{{slot:fn}}([1, 2, 3])
+      print(a, type(a).__name__)
+    blanks:
+      - id: fn
+        canonical_answer: "array"
+        accept_patterns: ['^array$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'ndarray'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`array`"
+      wrong_hint2: "`array`"
+      wrong_hint3: "`array`"
+
+  # Q2 — broadcast
+  - kind: exercise
+    title: "Q2. 配列に係数を掛ける"
+    prompt: "配列 `r` の全要素を 100 倍してパーセント表示にしてください。"
+    code_template: |
+      import numpy as np
+      r = np.array([0.01, -0.02, 0.005])
+      pct = {{slot:expr}}
+      print(pct)
+    blanks:
+      - id: expr
+        canonical_answer: "r * 100"
+        accept_patterns:
+          - '^r\s*\*\s*100$'
+          - '^100\s*\*\s*r$'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\[\s*1\.\s+-2\.\s+0\.5\s*\]'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`r * 100`"
+      wrong_hint2: "`r * 100`"
+      wrong_hint3: "`r * 100`"
+
+  # Q3 — std with ddof=1
+  - kind: exercise
+    title: "Q3. 不偏標準偏差"
+    prompt: "配列 `r` の不偏標準偏差を計算してください。"
+    code_template: |
+      import numpy as np
+      r = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      s = r.std({{slot:arg}})
+      print(round(float(s), 6))
+    blanks:
+      - id: arg
+        canonical_answer: "ddof=1"
+        accept_patterns: ['^ddof\s*=\s*1$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '0\.0135'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`ddof=1`"
+      wrong_hint2: "`ddof=1`"
+      wrong_hint3: "`ddof=1`"
+
+  # Q4 — random.normal
+  - kind: exercise
+    title: "Q4. 正規乱数を生成"
+    prompt: "平均 0、標準偏差 0.01、500 個の正規乱数を生成してください。"
+    code_template: |
+      import numpy as np
+      np.random.seed(0)
+      sim = np.random.normal({{slot:loc}}, {{slot:scale}}, {{slot:size}})
+      print(len(sim))
+    blanks:
+      - id: loc
+        canonical_answer: "0"
+        accept_patterns: ['^0(\.0)?$']
+      - id: scale
+        canonical_answer: "0.01"
+        accept_patterns: ['^0\.01$']
+      - id: size
+        canonical_answer: "500"
+        accept_patterns: ['^500$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^500\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "loc, scale, size"
+      wrong_hint2: "0, 0.01, 500"
+      wrong_hint3: "0, 0.01, 500"
+
+  # Q5 — pd.read_csv
+  - kind: exercise
+    title: "Q5. CSV を読み込む"
+    prompt: "`data/stock_prices.csv` を読み込んでください。"
+    code_template: |
+      import pandas as pd
+      df = pd.{{slot:fn}}("data/stock_prices.csv")
+      print(df.shape)
+    blanks:
+      - id: fn
+        canonical_answer: "read_csv"
+        accept_patterns: ['^read_csv$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\(60, 3\)'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`read_csv`"
+      wrong_hint2: "`read_csv`"
+      wrong_hint3: "`read_csv`"
+
+  # Q6 — Column selection
+  - kind: exercise
+    title: "Q6. 列を選択する"
+    prompt: "`df` から `BBB` 列を取り出してください。"
+    code_template: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      bbb = df[{{slot:col}}]
+      print(round(float(bbb.mean()), 2))
+    blanks:
+      - id: col
+        canonical_answer: '"BBB"'
+        accept_patterns:
+          - '^"BBB"$'
+          - "^'BBB'$"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^\d+\.\d+\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: '`"BBB"`'
+      wrong_hint2: '`"BBB"`'
+      wrong_hint3: '`"BBB"`'
+
+  # Q7 — pct_change
+  - kind: exercise
+    title: "Q7. 価格→リターン"
+    prompt: "`df[\"AAA\"]` の前日比リターン系列を作って NaN を除去してください。"
+    code_template: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      r = df["AAA"].{{slot:m}}().dropna()
+      print(len(r))
+    blanks:
+      - id: m
+        canonical_answer: "pct_change"
+        accept_patterns: ['^pct_change$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^59\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`pct_change`"
+      wrong_hint2: "`pct_change`"
+      wrong_hint3: "`pct_change`"
+
+  # Q8 — groupby
+  - kind: exercise
+    title: "Q8. groupby で集計"
+    prompt: "カテゴリ別の平均リターンを計算してください。"
+    code_template: |
+      import pandas as pd
+      df = pd.DataFrame({"cat": ["A","A","B","B"], "ret": [0.10, 0.05, 0.08, 0.04]})
+      avg = df.{{slot:fn}}("cat")["ret"].mean()
+      print(avg.to_dict())
+    blanks:
+      - id: fn
+        canonical_answer: "groupby"
+        accept_patterns: ['^groupby$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: "'A':"
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`groupby`"
+      wrong_hint2: "`groupby`"
+      wrong_hint3: "`groupby`"
+
+  # Q9 — matplotlib plot
+  - kind: exercise
+    title: "Q9. 折れ線グラフを描く"
+    prompt: "`df[\"AAA\"]` の折れ線グラフを描いてください。"
+    code_template: |
+      import pandas as pd
+      import matplotlib.pyplot as plt
+      df = pd.read_csv("data/stock_prices.csv")
+      plt.{{slot:fn}}(df["AAA"])
+      plt.show()
+      print("ok")
+    blanks:
+      - id: fn
+        canonical_answer: "plot"
+        accept_patterns: ['^plot$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^ok\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`plot`"
+      wrong_hint2: "`plot`"
+      wrong_hint3: "`plot`"
+
+  # Q10 — hist
+  - kind: exercise
+    title: "Q10. ヒストグラムを描く"
+    prompt: "リターン分布をヒストグラム（30 bins）で描いてください。"
+    code_template: |
+      import numpy as np
+      import matplotlib.pyplot as plt
+      np.random.seed(0)
+      r = np.random.normal(0, 0.01, 1000)
+      plt.{{slot:fn}}(r, bins={{slot:bins}})
+      plt.show()
+      print("ok")
+    blanks:
+      - id: fn
+        canonical_answer: "hist"
+        accept_patterns: ['^hist$']
+      - id: bins
+        canonical_answer: "30"
+        accept_patterns: ['^30$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^ok\s*$'
+    stickman_feedback:
+      correct: "完走！"
+      wrong_hint1: "`hist`, `30`"
+      wrong_hint2: "`hist`, `30`"
+      wrong_hint3: "`hist`, `30`"

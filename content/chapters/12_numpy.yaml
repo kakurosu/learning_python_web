@@ -1,0 +1,171 @@
+id: 12
+title: "NumPy 入門"
+phase: B
+prerequisites: [10]
+learning_goals:
+  - "`np.array` で配列を作れる"
+  - "ブロードキャストで配列全体に演算できる"
+  - "`mean / std / var` を計算できる"
+  - "乱数で日次リターン系列を生成できる"
+
+pages:
+  - kind: sample
+    title: "NumPy = 数値計算ライブラリ"
+    markdown: |
+      ## NumPy
+      Python の標準リストはループで処理するので遅いです。
+      **NumPy** の配列 (`ndarray`) は **ベクトル化** された演算ができ、
+      金融・統計・機械学習で必須です。
+      慣例で `import numpy as np` と省略します。
+    sample_code: |
+      import numpy as np
+      r = np.array([0.01, -0.02, 0.03, -0.005, 0.012])
+      print("平均:", r.mean())
+      print("標準偏差:", r.std(ddof=1))
+      print("配列+1:", r + 1)            # 全要素に 1 を足す = ブロードキャスト
+    runnable: true
+    stickman: explain
+    stickman_speech: "ループ無しで配列全部に演算できるのが NumPy の魅力！"
+
+  - kind: exercise
+    title: "リターン配列を作ろう"
+    prompt: |
+      **NumPy 配列（ndarray）** は Python リストと違い:
+      - 全要素が同じ型（メモリが連続配置）
+      - **C 言語レベルでベクトル化** されているのでループ無しで超高速
+      - 数学関数（`mean`, `std`, `dot` 等）が直接使える
+
+      `np.array(リスト)` で Python のリストを ndarray に変換できます。
+      これがすべての数値計算の出発点。pandas、scikit-learn、PyTorch も内部で NumPy を使っています。
+    code_template: |
+      import numpy as np
+      r = np.{{slot:fn}}([0.005, -0.01, 0.02, 0.0])
+      print(r)
+      print(type(r).__name__)
+    blanks:
+      - id: fn
+        canonical_answer: "array"
+        accept_patterns: ['^array$']
+        hint: "NumPy で配列を作る関数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'ndarray'
+      - kind: namespace_check
+        asserts:
+          - "type(r).__module__ == 'numpy'"
+    hints:
+      - "NumPy 配列を作るのは np.array(...)。"
+      - "`array` を入れてね。"
+    stickman_feedback:
+      correct: "ndarray、これがあらゆる数値計算の出発点！"
+      wrong_hint1: "リスト→配列の変換関数。"
+      wrong_hint2: "`array` だね。"
+      wrong_hint3: "`array`"
+
+  - kind: exercise
+    title: "ブロードキャストで年率に変換"
+    prompt: |
+      **基本形**（ブロードキャスト = 配列全体に一気に演算）:
+      ```python
+      r * 252            # スカラー倍   → 全要素 252 倍
+      r + 1              # スカラー加算 → 全要素に 1 加算
+      a * b              # 要素ごとの積（同形状）
+      np.exp(r)          # 数学関数も全要素に適用
+      ```
+
+      **使いどころ**: 日次→年率換算、リターン→価格、ログ変換、標準化など。
+      Python のループより **数十〜数百倍速い** ので、データ分析では「ループを書きそうになったら、まずブロードキャストで書けないか考える」のがプロの作法。
+    code_template: |
+      import numpy as np
+      r = np.array([0.001, -0.002, 0.003, 0.0])
+      annual = {{slot:expr}}
+      print(np.round(annual, 4))
+    blanks:
+      - id: expr
+        canonical_answer: "r * 252"
+        accept_patterns:
+          - '^r\s*\*\s*252$'
+          - '^252\s*\*\s*r$'
+        hint: "配列にスカラーを掛ける"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\[\s*0\.252\s+-0\.504\s+0\.756\s+0\.\s*\]'
+      - kind: namespace_check
+        asserts:
+          - "abs(annual[0] - 0.252) < 1e-9"
+    hints:
+      - "ループ不要！`r * 252` でOK。"
+      - "`r * 252` を入れてね。"
+    stickman_feedback:
+      correct: "ベクトル化、慣れるとループに戻れないよ！"
+      wrong_hint1: "配列に直接スカラーを掛ければOK。"
+      wrong_hint2: "`r * 252` だね。"
+      wrong_hint3: "`r * 252`"
+
+  - kind: exercise
+    title: "標準偏差を ddof=1 で計算しよう"
+    prompt: |
+      リターン配列 `r` の **不偏標準偏差** (`ddof=1`) を計算して `vol` に入れてください。
+    code_template: |
+      import numpy as np
+      r = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      vol = r.{{slot:method}}({{slot:arg}})
+      print(round(float(vol), 6))
+    blanks:
+      - id: method
+        canonical_answer: "std"
+        accept_patterns: ['^std$']
+        hint: "標準偏差のメソッド"
+      - id: arg
+        canonical_answer: "ddof=1"
+        accept_patterns: ['^ddof\s*=\s*1$']
+        hint: "不偏推定にする引数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '0\.0135'
+    hints:
+      - "標準偏差は std。"
+      - "不偏推定は ddof=1。"
+    stickman_feedback:
+      correct: "不偏推定は CMA でも頻出！"
+      wrong_hint1: "`std` と `ddof=1`。"
+      wrong_hint2: "`std` と `ddof=1`。"
+      wrong_hint3: "`std` と `ddof=1`。"
+
+  - kind: exercise
+    title: "正規分布から日次リターンを 1000 個生成しよう"
+    prompt: |
+      平均 0.0005、標準偏差 0.01 の正規分布から **1000 個** の乱数を生成して `sim` に入れてください。
+      再現性のために `np.random.seed(0)` を最初に呼んでいます。
+    code_template: |
+      import numpy as np
+      np.random.seed(0)
+      sim = np.random.normal({{slot:loc}}, {{slot:scale}}, {{slot:size}})
+      print(len(sim), round(sim.mean(), 5))
+    blanks:
+      - id: loc
+        canonical_answer: "0.0005"
+        accept_patterns: ['^0\.0005$']
+        hint: "平均 (loc)"
+      - id: scale
+        canonical_answer: "0.01"
+        accept_patterns: ['^0\.01$']
+        hint: "標準偏差 (scale)"
+      - id: size
+        canonical_answer: "1000"
+        accept_patterns: ['^1000$']
+        hint: "個数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^1000\s+'
+      - kind: namespace_check
+        asserts:
+          - "len(sim) == 1000"
+    hints:
+      - "`np.random.normal(loc, scale, size)` の 3 引数。"
+      - "loc=0.0005, scale=0.01, size=1000。"
+    stickman_feedback:
+      correct: "モンテカルロの第一歩！"
+      wrong_hint1: "loc, scale, size の順。"
+      wrong_hint2: "`0.0005`, `0.01`, `1000`。"
+      wrong_hint3: "`0.0005`, `0.01`, `1000`。"

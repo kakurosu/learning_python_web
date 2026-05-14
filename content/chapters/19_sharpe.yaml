@@ -1,0 +1,121 @@
+id: 19
+title: "シャープレシオ・情報比率"
+phase: C
+prerequisites: [18]
+learning_goals:
+  - "シャープレシオ SR = (μ - rf) / σ を計算できる"
+  - "情報比率 IR = α / TE を計算できる"
+  - "両指標が「リスク 1 単位あたりのリターン」であることを理解する"
+
+pages:
+  - kind: sample
+    title: "シャープレシオ — リスク調整リターン"
+    markdown: |
+      ## SR = (期待リターン − リスクフリー) ÷ ボラティリティ
+      「**取ったリスク 1 単位** あたりに、無リスク資産より **どれだけ稼いだか**」を測る指標。
+      高いほど効率の良い運用。一般的に SR > 1 は優秀、> 2 は卓越。
+    sample_code: |
+      def sharpe_ratio(mu, vol, rf=0.0):
+          return (mu - rf) / vol
+
+      print("Fund A:", round(sharpe_ratio(0.10, 0.18, 0.02), 4))
+      print("Fund B:", round(sharpe_ratio(0.06, 0.08, 0.02), 4))
+    runnable: true
+    expected_output: "Fund A: 0.4444\nFund B: 0.5"
+    stickman: explain
+    stickman_speech: "リターンが高くてもリスクが大きいと SR は下がる！"
+
+  - kind: sample
+    title: "情報比率 (IR)"
+    markdown: |
+      ## IR = α ÷ TE
+      ベンチマーク **対比** の評価指標です。
+      - **α (アルファ)**: ベンチマーク超過の期待リターン (= 平均アクティブリターン)
+      - **TE**: アクティブリターンのボラ（前章）
+
+      アクティブ運用の腕前を測る代表指標。
+    sample_code: |
+      alpha = 0.03   # ベンチ対比 +3%
+      te = 0.04
+      ir = alpha / te
+      print(round(ir, 4))
+    runnable: true
+    expected_output: "0.75"
+    stickman: explain
+    stickman_speech: "IR > 0.5 はそこそこ、> 1 は優秀なアクティブマネージャー！"
+
+  - kind: exercise
+    title: "シャープレシオ関数を作ろう"
+    prompt: |
+      **シャープレシオ（Sharpe Ratio, SR）** は William Sharpe が提唱（ノーベル経済学賞）したリスク調整リターン指標:
+
+      $$ SR = \frac{\mu - r_f}{\sigma} $$
+
+      意味:「**1 単位のリスク** で何 % の超過リターンが得られるか」。
+      - **SR > 1** : 優秀
+      - **SR > 2** : 卓越（プロでもなかなか到達しない）
+      - **SR < 0** : 無リスク資産以下（運用する価値なし）
+
+      `rf=0.0` をデフォルトにすると、`sharpe(mu, vol)` のように `rf` を省略して呼べます。同じ関数を複数の場面で再利用しやすくなります。
+    code_template: |
+      def sharpe(mu, vol, {{slot:rf_arg}}):
+          return {{slot:formula}}
+
+      print(round(sharpe(0.10, 0.18, 0.02), 4))
+      print(round(sharpe(0.10, 0.18), 4))
+    blanks:
+      - id: rf_arg
+        canonical_answer: "rf=0.0"
+        accept_patterns:
+          - '^rf\s*=\s*0\.0?$'
+          - '^rf\s*=\s*0$'
+        hint: "デフォルト 0 のキーワード引数"
+      - id: formula
+        canonical_answer: "(mu - rf) / vol"
+        accept_patterns:
+          - '^\(?\s*mu\s*-\s*rf\s*\)?\s*/\s*vol$'
+        hint: "(mu - rf) / vol"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.4444\s*\n0\.5556\s*$'
+    hints:
+      - "`rf=0` をデフォルトにする。"
+      - "式は `(mu - rf) / vol`。"
+    stickman_feedback:
+      correct: "デフォルト引数で柔軟な関数になったね！"
+      wrong_hint1: "`rf=0.0` と `(mu - rf) / vol`。"
+      wrong_hint2: "`rf=0.0` と `(mu - rf) / vol`。"
+      wrong_hint3: "`rf=0.0` と `(mu - rf) / vol`。"
+
+  - kind: exercise
+    title: "情報比率を計算しよう"
+    prompt: |
+      アクティブリターンの **平均（年率）を α**、**標準偏差（年率）を TE** として、
+      情報比率 IR を計算してください。
+    code_template: |
+      import numpy as np
+      active = np.array([0.001, -0.0008, 0.002, 0.0012, -0.0005, 0.0015, 0.001])
+      alpha = active.mean() * 252
+      te = active.std(ddof=1) * np.sqrt(252)
+      ir = {{slot:expr}}
+      print(round(float(ir), 4))
+    blanks:
+      - id: expr
+        canonical_answer: "alpha / te"
+        accept_patterns:
+          - '^alpha\s*/\s*te$'
+        hint: "α ÷ TE"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^\d+\.\d+\s*$'
+      - kind: namespace_check
+        asserts:
+          - "ir > 0"
+    hints:
+      - "α / TE を入れるだけ。"
+      - "`alpha / te`"
+    stickman_feedback:
+      correct: "IR がアクティブ運用の腕前だよ！"
+      wrong_hint1: "`alpha / te`"
+      wrong_hint2: "`alpha / te`"
+      wrong_hint3: "`alpha / te`"

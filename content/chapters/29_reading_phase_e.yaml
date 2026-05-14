@@ -1,0 +1,87 @@
+id: 29
+title: "コードを読もう — Phase E 外部連携の総復習"
+phase: E
+prerequisites: [27, 28]
+learning_goals:
+  - "requests + BeautifulSoup と Anthropic SDK を使ったコードを読み解ける"
+
+pages:
+  # ─── Q1: requests（章 23） ──────────────────────────
+  - kind: reading
+    title: "HTTP GET の取得（章 23 復習）"
+    prompt: |
+      下のコードについて、`html` の中身として正しいものを選んでください。
+    code: |
+      import requests
+      response = requests.get("https://example.com")
+      html = response.text
+    code_file_label: "q01.py"
+    choices:
+      - "レスポンスの HTML 文字列（str 型）"
+      - "レスポンスのバイト列（bytes 型）"
+      - "レスポンスのステータスコード（int 型）"
+      - "レスポンスのヘッダ辞書（dict 型）"
+    correct_index: 0
+    explanation: |
+      `requests.Response.text` はエンコードを推定して **str に変換した本文** を返します。バイト列が欲しいときは `.content`、ステータスは `.status_code`、ヘッダは `.headers`。
+
+  # ─── Q2: BeautifulSoup の find_all（章 23） ────────
+  - kind: reading
+    title: "リンク抽出（章 23 復習）"
+    prompt: |
+      下のコードが取得しているものとして正しいものを選んでください。
+    code: |
+      from bs4 import BeautifulSoup
+      soup = BeautifulSoup(html, "html.parser")
+      result = [a.get("href") for a in soup.find_all("a")]
+    code_file_label: "q02.py"
+    choices:
+      - "ページ内のすべてのテキストノード"
+      - "ページ内のすべてのリンク先 URL（<a> タグの href 属性）"
+      - "ページ内のすべての画像 URL"
+      - "ページのタイトル文字列"
+    correct_index: 1
+    explanation: |
+      `find_all("a")` で全 `<a>` 要素を取り、`a.get("href")` で属性値を抽出。スクレイピングで「ページ内の全リンク」を取る定番パターンです。
+
+  # ─── Q3: OpenAI クライアント初期化（章 24） ─────────
+  - kind: reading
+    title: "OpenAI SDK の認証（章 24 復習）"
+    prompt: |
+      下のコードについて、`OpenAI()` が API キーをどこから取るか正しいものを選んでください。
+    code: |
+      from openai import OpenAI
+      client = OpenAI()  # 引数を省略
+    code_file_label: "q03.py"
+    choices:
+      - "ハードコードされた文字列リテラル"
+      - "環境変数 OPENAI_API_KEY を自動で参照する"
+      - "毎回ユーザー入力 (input) を求める"
+      - "Web 経由で対話的に認証する"
+    correct_index: 1
+    explanation: |
+      `OpenAI()` を引数なしで呼ぶと、SDK が **環境変数 `OPENAI_API_KEY`** を自動で読み込みます。`.env` から `python-dotenv` で読み込んだ値もそのまま使えます。コードにキーを直書きすると漏洩のリスクがあるため避けます。
+
+  # ─── Q4: chat.completions.create 呼び出し（章 24） ─
+  - kind: reading
+    title: "OpenAI Chat Completions の構造（章 24 復習）"
+    prompt: |
+      下のコードについて、`messages` パラメータの構造として正しいものを選んでください。
+    code: |
+      response = client.chat.completions.create(
+          model="gpt-4o-mini",
+          max_tokens=200,
+          messages=[
+              {"role": "system", "content": "あなたは投資アナリストです"},
+              {"role": "user",   "content": "シャープレシオとは？"},
+          ],
+      )
+    code_file_label: "q04.py"
+    choices:
+      - "文字列のリスト"
+      - "{role, content} 形式の辞書のリスト"
+      - "単一の文字列"
+      - "{prompt, completion} 形式の辞書"
+    correct_index: 1
+    explanation: |
+      OpenAI Chat API の `messages` は **`{"role": "system" | "user" | "assistant", "content": ...}` の辞書を要素とするリスト**。会話履歴もこの形式で並べていきます（Anthropic Claude API もほぼ同じ形式）。

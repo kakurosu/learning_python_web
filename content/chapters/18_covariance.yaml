@@ -1,0 +1,132 @@
+id: 18
+title: "共分散・相関・トラッキングエラー"
+phase: C
+prerequisites: [17]
+learning_goals:
+  - "共分散と相関の関係を理解する"
+  - "`np.cov` と `np.corrcoef` を使い分ける"
+  - "トラッキングエラー TE = σ(r_p − r_b) を計算できる"
+
+pages:
+  - kind: sample
+    title: "共分散と相関"
+    markdown: |
+      ## 2 つの系列の関係性
+      - **共分散**: `Cov(X, Y) = E[(X-μx)(Y-μy)]`。単位は X と Y の積。
+      - **相関係数**: `Corr(X,Y) = Cov(X,Y) / (σx σy)`。-1 〜 +1 の範囲で単位なし。
+
+      共分散行列・相関行列は `np.cov` / `np.corrcoef` で一発計算できます。
+    sample_code: |
+      import numpy as np
+      a = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      b = np.array([0.008, -0.015, 0.004, 0.010, -0.005])
+      cov_mat = np.cov(a, b, ddof=1)
+      corr_mat = np.corrcoef(a, b)
+      print("Cov(a,b)  =", round(cov_mat[0, 1], 6))
+      print("Corr(a,b) =", round(corr_mat[0, 1], 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "相関 +1 = 完全に同じ向きに動くということ。"
+
+  - kind: sample
+    title: "トラッキングエラーとは"
+    markdown: |
+      ## TE = アクティブリターンのボラティリティ
+      ファンドリターン `r_p` とベンチマーク `r_b` の差を **アクティブリターン** と呼びます。
+      その標準偏差（年率換算）が **トラッキングエラー (TE)**。
+      アクティブ運用の「ベンチマークからの逸脱の大きさ」を測る指標で、
+      情報比率の分母にもなります（次章）。
+    sample_code: |
+      import numpy as np
+      rp = np.array([0.012, -0.018, 0.005, 0.015, -0.007])
+      rb = np.array([0.010, -0.015, 0.004, 0.012, -0.005])
+      active = rp - rb
+      te_annual = active.std(ddof=1) * np.sqrt(252)
+      print("TE (年率):", round(te_annual, 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "TE は「ベンチマークからどれだけずれた」を測る大事な指標！"
+
+  - kind: exercise
+    title: "共分散を計算しよう"
+    prompt: |
+      `a` と `b` の共分散（不偏推定 ddof=1）を計算してください。
+      `np.cov` の戻り値は 2×2 行列なので、`[0, 1]` の値が共分散です。
+    code_template: |
+      import numpy as np
+      a = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      b = np.array([0.008, -0.015, 0.004, 0.010, -0.005])
+      cov_ab = np.{{slot:fn}}(a, b, ddof=1)[0, 1]
+      print(round(float(cov_ab), 6))
+    blanks:
+      - id: fn
+        canonical_answer: "cov"
+        accept_patterns: ['^cov$']
+        hint: "共分散関数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.00014\s*$'
+    hints:
+      - "共分散関数は np.cov。"
+      - "`cov`"
+    stickman_feedback:
+      correct: "共分散はポートフォリオ理論の基礎！"
+      wrong_hint1: "`cov`"
+      wrong_hint2: "`cov`"
+      wrong_hint3: "`cov`"
+
+  - kind: exercise
+    title: "相関係数を計算しよう"
+    prompt: |
+      同じ `a`, `b` の相関係数を計算してください。
+    code_template: |
+      import numpy as np
+      a = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      b = np.array([0.008, -0.015, 0.004, 0.010, -0.005])
+      corr_ab = np.{{slot:fn}}(a, b)[0, 1]
+      print(round(float(corr_ab), 4))
+    blanks:
+      - id: fn
+        canonical_answer: "corrcoef"
+        accept_patterns: ['^corrcoef$']
+        hint: "相関係数の関数名"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.9993\s*$'
+    hints:
+      - "相関は np.corrcoef。"
+      - "`corrcoef`"
+    stickman_feedback:
+      correct: "相関 ≒ 1 で 2 銘柄はほぼ同じ動きだね！"
+      wrong_hint1: "`corrcoef`"
+      wrong_hint2: "`corrcoef`"
+      wrong_hint3: "`corrcoef`"
+
+  - kind: exercise
+    title: "トラッキングエラーを計算しよう"
+    prompt: |
+      ファンドリターン `rp` とベンチマーク `rb` から年率トラッキングエラーを計算してください。
+    code_template: |
+      import numpy as np
+      rp = np.array([0.012, -0.018, 0.005, 0.015, -0.007])
+      rb = np.array([0.010, -0.015, 0.004, 0.012, -0.005])
+      active = {{slot:diff}}
+      te = active.std(ddof=1) * np.sqrt(252)
+      print(round(float(te), 4))
+    blanks:
+      - id: diff
+        canonical_answer: "rp - rb"
+        accept_patterns:
+          - '^rp\s*-\s*rb$'
+        hint: "アクティブリターン = ファンド − ベンチ"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0411\s*$'
+    hints:
+      - "アクティブリターン = rp - rb。"
+      - "`rp - rb`"
+    stickman_feedback:
+      correct: "アクティブ運用の評価指標、TE！"
+      wrong_hint1: "`rp - rb`"
+      wrong_hint2: "`rp - rb`"
+      wrong_hint3: "`rp - rb`"

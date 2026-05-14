@@ -1,0 +1,114 @@
+id: 6
+title: "条件分岐 (if / elif / else)"
+phase: A
+prerequisites: [3]
+learning_goals:
+  - "比較演算子 (==, !=, <, <=, >, >=) を使える"
+  - "if / elif / else で分岐を書ける"
+  - "and / or / not を使える"
+
+pages:
+  - kind: sample
+    title: "if 文の基本"
+    markdown: |
+      ## 条件で処理を分ける
+      `if 条件:` の下にインデントしてブロックを書きます。
+      条件が False のときは `else:` のブロックが実行されます。
+      複数の条件がある場合は `elif` を使います。
+    sample_code: |
+      score = 75
+      if score >= 80:
+          rank = "A"
+      elif score >= 60:
+          rank = "B"
+      else:
+          rank = "C"
+      print(rank)
+    runnable: true
+    expected_output: "B"
+    stickman: explain
+    stickman_speech: "コロン `:` とインデント（4 スペース）を忘れないでね。"
+
+  - kind: exercise
+    title: "リターンが正か負か判定しよう"
+    prompt: |
+      条件分岐は 3 つの構造があります:
+      - `if 条件:` — 単独
+      - `if A: ... else: ...` — 二択
+      - `if A: ... elif B: ... else: ...` — 三択以上
+
+      Python では **インデント（半角スペース 4 つ）** がブロックを示します。`{}` で囲む言語と違うので、最初は違和感があるかもしれません。
+
+      下のコードでは `r` の値（負）に応じて `up / down / flat` を出し分けます。比較演算子 `>` `<` を使って 2 つの条件を完成させよう。
+    code_template: |
+      r = -0.012
+      if r {{slot:cond1}}:
+          print("up")
+      elif r {{slot:cond2}}:
+          print("down")
+      else:
+          print("flat")
+    blanks:
+      - id: cond1
+        placeholder: "比較"
+        width: 8
+        accept_patterns:
+          - '^>\s*0$'
+        canonical_answer: "> 0"
+        hint: "正は 0 より大きい"
+      - id: cond2
+        placeholder: "比較"
+        width: 8
+        accept_patterns:
+          - '^<\s*0$'
+        canonical_answer: "< 0"
+        hint: "負は 0 より小さい"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^down\s*$'
+    hints:
+      - "比較演算子は > と <。"
+      - "`> 0` と `< 0` を入れてみて。"
+    stickman_feedback:
+      correct: "正・負・ゼロをきちんと分けるのが分析の基本！"
+      wrong_hint1: "比較は > や < を使う。"
+      wrong_hint2: "`> 0` と `< 0` だね。"
+      wrong_hint3: "答えは `> 0` と `< 0`。"
+
+  - kind: exercise
+    title: "AND 条件で範囲チェック"
+    prompt: |
+      **論理演算子** で複数の条件をつなげます:
+      - `A and B` — 両方が真のとき真
+      - `A or B` — どちらかが真のとき真
+      - `not A` — A の否定
+
+      シャープレシオは `0.5〜1.5` あたりが「妥当な水準」とされ、**範囲チェック** に `and` を使います。
+
+      Python は `0.5 <= sr <= 1.5` のように **連鎖比較** も書けますが（数学的で読みやすい）、`and` を明示する書き方も分かりやすいです。`sr = 0.8` なので「適正」と表示されるはず。
+    code_template: |
+      sr = 0.8
+      if {{slot:cond}}:
+          print("適正")
+      else:
+          print("要注意")
+    blanks:
+      - id: cond
+        placeholder: "and を含む条件式"
+        width: 28
+        accept_patterns:
+          - '^sr\s*>=\s*0\.5\s+and\s+sr\s*<=\s*1\.5$'
+          - '^0\.5\s*<=\s*sr\s*<=\s*1\.5$'
+        canonical_answer: "sr >= 0.5 and sr <= 1.5"
+        hint: "`A and B` で 2 つの条件をつなぐ"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^適正\s*$'
+    hints:
+      - "`>=` と `<=` を `and` でつなぐよ。"
+      - "`sr >= 0.5 and sr <= 1.5` を入れてみて。"
+    stickman_feedback:
+      correct: "範囲チェックはバリデーションでよく使うよ！"
+      wrong_hint1: "`A and B` の形で 2 つの条件をつなごう。"
+      wrong_hint2: "`sr >= 0.5 and sr <= 1.5` だね。"
+      wrong_hint3: "答えは `sr >= 0.5 and sr <= 1.5`。"

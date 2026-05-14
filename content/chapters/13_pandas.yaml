@@ -1,0 +1,128 @@
+id: 13
+title: "pandas 入門"
+phase: B
+prerequisites: [12]
+learning_goals:
+  - "DataFrame と Series の違いを理解する"
+  - "CSV を読み込んで列を選択できる"
+  - "loc / iloc で行・列を取り出せる"
+  - "describe で統計量を見られる"
+
+pages:
+  - kind: sample
+    title: "pandas = 表データの王様"
+    markdown: |
+      ## DataFrame
+      pandas の `DataFrame` はエクセルのような **2 次元の表** です。
+      列名を指定して値を取り出したり、条件で絞り込んだりできます。
+      `import pandas as pd` が定番。
+    sample_code: |
+      import pandas as pd
+      df = pd.DataFrame({
+          "fund": ["A", "B", "C"],
+          "ret": [0.10, 0.06, 0.08],
+          "vol": [0.18, 0.12, 0.14],
+      })
+      print(df)
+      print(df["ret"].mean())
+    runnable: true
+    stickman: explain
+    stickman_speech: "DataFrame は Excel のシートだと思えば OK！"
+
+  - kind: sample
+    title: "CSV の読み込み"
+    markdown: |
+      `pd.read_csv("path")` で CSV を読み込めます。
+      `data/stock_prices.csv` には 60 営業日ぶんの 2 銘柄の終値が入っています。
+    sample_code: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      print(df.head())
+      print(df.shape)
+      print(df.columns.tolist())
+    runnable: true
+    stickman: explain
+    stickman_speech: "head() で最初の 5 行、shape で行数×列数が分かるよ。"
+
+  - kind: exercise
+    title: "DataFrame を作ろう"
+    prompt: |
+      ファンド名と経費率を持つ DataFrame を作ってください。
+      `pd.DataFrame()` の引数に **辞書** を渡します。
+    code_template: |
+      import pandas as pd
+      df = pd.{{slot:cls}}({"name": ["A", "B", "C"], "expense": [0.012, 0.008, 0.020]})
+      print(df.shape)
+    blanks:
+      - id: cls
+        canonical_answer: "DataFrame"
+        accept_patterns: ['^DataFrame$']
+        hint: "pandas の表クラス"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\(3, 2\)'
+      - kind: namespace_check
+        asserts:
+          - "df.shape == (3, 2)"
+    hints:
+      - "クラス名は DataFrame（D 大文字）。"
+      - "`DataFrame` だね。"
+    stickman_feedback:
+      correct: "辞書から DataFrame、便利だよね！"
+      wrong_hint1: "クラス名の D は大文字。"
+      wrong_hint2: "`DataFrame`"
+      wrong_hint3: "`DataFrame`"
+
+  - kind: exercise
+    title: "CSV を読んで列を取り出そう"
+    prompt: |
+      `data/stock_prices.csv` を読み込んで、`AAA` 列だけを Series として `aaa` に入れてください。
+    code_template: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      aaa = df[{{slot:col}}]
+      print(round(float(aaa.mean()), 2))
+    blanks:
+      - id: col
+        canonical_answer: '"AAA"'
+        accept_patterns:
+          - '^"AAA"$'
+          - "^'AAA'$"
+        hint: "列名は文字列で指定"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^957\.93\s*$'
+    hints:
+      - "列を取り出すのは `df[\"列名\"]`。"
+      - '`"AAA"` を入れてね。'
+    stickman_feedback:
+      correct: "列の選択は分析の第一歩！"
+      wrong_hint1: "クォートで列名を囲もう。"
+      wrong_hint2: '`"AAA"`'
+      wrong_hint3: '`"AAA"`'
+
+  - kind: exercise
+    title: "describe で要約統計を表示しよう"
+    prompt: |
+      `df[\"AAA\"]` の **要約統計（平均・標準偏差・最小・最大など）** を describe で表示してください。
+    code_template: |
+      import pandas as pd
+      df = pd.read_csv("data/stock_prices.csv")
+      summary = df["AAA"].{{slot:method}}()
+      print(summary["mean"])
+    blanks:
+      - id: method
+        canonical_answer: "describe"
+        accept_patterns: ['^describe$']
+        hint: "統計サマリのメソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '957\.9'
+    hints:
+      - "Series の統計量メソッド。"
+      - "`describe` だね。"
+    stickman_feedback:
+      correct: "describe は分析最初の儀式！"
+      wrong_hint1: "サマリ統計の名前。"
+      wrong_hint2: "`describe`"
+      wrong_hint3: "`describe`"

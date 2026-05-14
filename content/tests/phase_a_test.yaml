@@ -1,0 +1,265 @@
+id: phase_a_test
+title: "Phase A 実力テスト"
+description: "Python 文法基礎（章 01-10）の実力テスト。10 問・制限時間 30 分・合格基準 60%。"
+phase: A
+time_limit_minutes: 30
+pass_score: 0.6
+
+questions:
+  # Q1 — print の基本
+  - kind: exercise
+    title: "Q1. 文字列を表示する"
+    prompt: "`Python is fun!` と表示するコードを完成させてください。"
+    code_template: |
+      print({{slot:s}})
+    blanks:
+      - id: s
+        canonical_answer: '"Python is fun!"'
+        accept_patterns:
+          - '^"Python is fun!"$'
+          - "^'Python is fun!'$"
+        hint: "文字列はクォートで囲む"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^Python is fun!\s*$'
+    stickman_feedback:
+      correct: "やった！"
+      wrong_hint1: "クォートで囲もう。"
+      wrong_hint2: '`"Python is fun!"` だね。'
+      wrong_hint3: '`"Python is fun!"`'
+
+  # Q2 — 変数と f-string
+  - kind: exercise
+    title: "Q2. 単利の元利合計"
+    prompt: |
+      元金 1,000,000 円を年率 3% で 5 年間運用したときの **単利** での元利合計を表示するコードを書いてください。
+      （単利: 元金 + 元金 × 利率 × 年数）
+    code_template: |
+      principal = 1000000
+      rate = 0.03
+      years = 5
+      total = principal {{slot:expr}}
+      print(int(total))
+    blanks:
+      - id: expr
+        canonical_answer: "* (1 + rate * years)"
+        accept_patterns:
+          - '^\*\s*\(1\s*\+\s*rate\s*\*\s*years\)$'
+          - '^\+\s*principal\s*\*\s*rate\s*\*\s*years$'
+        hint: "元金 × (1 + 利率 × 年数)"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^1150000\s*$'
+    stickman_feedback:
+      correct: "金融計算の第一歩！"
+      wrong_hint1: "(1 + rate * years) を掛けるよ。"
+      wrong_hint2: "`* (1 + rate * years)` だね。"
+      wrong_hint3: "`* (1 + rate * years)`"
+
+  # Q3 — べき乗（複利）
+  - kind: exercise
+    title: "Q3. 複利の元利合計"
+    prompt: |
+      同じ条件で **複利** にしたときの元利合計を整数で表示してください。
+      （複利: 元金 × (1 + 利率) ^ 年数）
+    code_template: |
+      principal = 1000000
+      rate = 0.03
+      years = 5
+      total = principal * (1 + rate) {{slot:op}} years
+      print(round(total))
+    blanks:
+      - id: op
+        canonical_answer: "**"
+        accept_patterns:
+          - '^\*\*$'
+        hint: "べき乗演算子"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^1159274\s*$'
+    stickman_feedback:
+      correct: "複利マジック！"
+      wrong_hint1: "べき乗は * を 2 つ続ける。"
+      wrong_hint2: "`**`"
+      wrong_hint3: "`**`"
+
+  # Q4 — 組み込み関数
+  - kind: exercise
+    title: "Q4. 平均日次リターン"
+    prompt: "`r` の平均値を 4 桁で丸めて表示してください（sum と len を使う）。"
+    code_template: |
+      r = [0.01, -0.02, 0.005, 0.012, -0.008]
+      mean = {{slot:s}} / {{slot:n}}
+      print(round(mean, 4))
+    blanks:
+      - id: s
+        canonical_answer: "sum(r)"
+        accept_patterns: ['^sum\(r\)$']
+        hint: "合計"
+      - id: n
+        canonical_answer: "len(r)"
+        accept_patterns: ['^len\(r\)$']
+        hint: "個数"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^-0\.0002\s*$'
+    stickman_feedback:
+      correct: "平均は基本！"
+      wrong_hint1: "sum と len を使う。"
+      wrong_hint2: "`sum(r)` と `len(r)`"
+      wrong_hint3: "`sum(r)` と `len(r)`"
+
+  # Q5 — if 文
+  - kind: exercise
+    title: "Q5. リターンが閾値を超えたか"
+    prompt: |
+      `r` が **0.05 以上**なら `"high"` と表示してください。`>=` を使います。
+    code_template: |
+      r = 0.06
+      if r {{slot:cond}}:
+          print("high")
+      else:
+          print("low")
+    blanks:
+      - id: cond
+        canonical_answer: ">= 0.05"
+        accept_patterns:
+          - '^>=\s*0\.05$'
+        hint: ">= で比較する"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^high\s*$'
+    stickman_feedback:
+      correct: "閾値判定はモニタリングの基本！"
+      wrong_hint1: ">= を使う。"
+      wrong_hint2: "`>= 0.05`"
+      wrong_hint3: "`>= 0.05`"
+
+  # Q6 — for ループ
+  - kind: exercise
+    title: "Q6. プラスのリターン日数を数える"
+    prompt: "`returns` の中で **正の値の個数** を `count` に求めて表示してください。"
+    code_template: |
+      returns = [0.01, -0.02, 0.005, 0.012, -0.008, 0.0, 0.003]
+      count = 0
+      for r in returns:
+          if r > 0:
+              {{slot:body}}
+      print(count)
+    blanks:
+      - id: body
+        canonical_answer: "count += 1"
+        accept_patterns:
+          - '^count\s*\+=\s*1$'
+          - '^count\s*=\s*count\s*\+\s*1$'
+        hint: "count に 1 を足す"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^4\s*$'
+    stickman_feedback:
+      correct: "勝ち日数の集計！"
+      wrong_hint1: "+= 1 を使う。"
+      wrong_hint2: "`count += 1`"
+      wrong_hint3: "`count += 1`"
+
+  # Q7 — リスト・スライス
+  - kind: exercise
+    title: "Q7. 直近 3 営業日の終値"
+    prompt: "`prices` の **末尾 3 つ** をスライスで取り出してください。"
+    code_template: |
+      prices = [100, 102, 98, 105, 110, 108]
+      last3 = prices[{{slot:slc}}]
+      print(last3)
+    blanks:
+      - id: slc
+        canonical_answer: "-3:"
+        accept_patterns:
+          - '^-3:$'
+          - '^3:$'
+        hint: "マイナスインデックス"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^\[105, 110, 108\]\s*$'
+    stickman_feedback:
+      correct: "スライス使いこなしてるね！"
+      wrong_hint1: "[-3:] を使う。"
+      wrong_hint2: "`-3:`"
+      wrong_hint3: "`-3:`"
+
+  # Q8 — 辞書
+  - kind: exercise
+    title: "Q8. 辞書から値を取り出す"
+    prompt: "辞書 `fund` から `aum`（運用残高）を取り出して `aum` 変数に入れて表示してください。"
+    code_template: |
+      fund = {"name": "AAA Fund", "expense_ratio": 0.012, "aum": 5000000000}
+      aum = fund[{{slot:key}}]
+      print(aum)
+    blanks:
+      - id: key
+        canonical_answer: '"aum"'
+        accept_patterns:
+          - '^"aum"$'
+          - "^'aum'$"
+        hint: "キーは文字列"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^5000000000\s*$'
+    stickman_feedback:
+      correct: "辞書アクセスは現場で頻出！"
+      wrong_hint1: "キーをクォートで囲む。"
+      wrong_hint2: '`"aum"`'
+      wrong_hint3: '`"aum"`'
+
+  # Q9 — def 関数
+  - kind: exercise
+    title: "Q9. シャープレシオを計算する関数"
+    prompt: |
+      期待リターン `mean`、ボラ `vol`、リスクフリーレート `rf` から
+      `(mean - rf) / vol` を返す関数 `sharpe` を完成させてください。
+    code_template: |
+      def sharpe(mean, vol, rf=0.0):
+          return {{slot:expr}}
+
+      print(round(sharpe(0.10, 0.15, rf=0.02), 4))
+    blanks:
+      - id: expr
+        canonical_answer: "(mean - rf) / vol"
+        accept_patterns:
+          - '^\(?\s*mean\s*-\s*rf\s*\)?\s*/\s*vol$'
+        hint: "(リターン - リスクフリー) ÷ ボラ"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.5333\s*$'
+    stickman_feedback:
+      correct: "シャープレシオは CMA でも超頻出！"
+      wrong_hint1: "(mean - rf) / vol"
+      wrong_hint2: "`(mean - rf) / vol`"
+      wrong_hint3: "`(mean - rf) / vol`"
+
+  # Q10 — lambda
+  - kind: exercise
+    title: "Q10. lambda で年率換算"
+    prompt: |
+      日次リターン × 252 を返す `lambda` を `annual` に代入してください。
+    code_template: |
+      annual = lambda {{slot:arg}}: {{slot:body}}
+      print(round(annual(0.001), 4))
+    blanks:
+      - id: arg
+        canonical_answer: "x"
+        accept_patterns: ['^[A-Za-z_]\w*$']
+        hint: "好きな引数名で OK"
+      - id: body
+        canonical_answer: "x * 252"
+        accept_patterns:
+          - '^[A-Za-z_]\w*\s*\*\s*252$'
+          - '^252\s*\*\s*[A-Za-z_]\w*$'
+        hint: "引数 × 252"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.252\s*$'
+    stickman_feedback:
+      correct: "完走！お疲れさま"
+      wrong_hint1: "lambda 引数: 式"
+      wrong_hint2: "`x` と `x * 252`"
+      wrong_hint3: "`x` と `x * 252`"

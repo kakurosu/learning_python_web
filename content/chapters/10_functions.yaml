@@ -1,0 +1,142 @@
+id: 10
+title: "関数定義"
+phase: A
+prerequisites: [9]
+learning_goals:
+  - "`def` で関数を定義し、引数と戻り値を扱える"
+  - "デフォルト引数を使える"
+  - "lambda で 1 行関数を書ける"
+  - "*args / **kwargs の基本を知る"
+
+pages:
+  - kind: sample
+    title: "関数で処理をまとめる"
+    markdown: |
+      ## 関数定義の文法
+      ```
+      def 関数名(引数1, 引数2):
+          処理
+          return 戻り値
+      ```
+      同じ計算を複数回行うときは関数にまとめると、コードが読みやすく・直しやすくなります。
+    sample_code: |
+      def sharpe(mean, vol, rf=0.0):
+          return (mean - rf) / vol
+
+      print(round(sharpe(0.10, 0.15), 3))
+      print(round(sharpe(0.10, 0.15, rf=0.02), 3))
+    runnable: true
+    expected_output: "0.667\n0.533"
+    stickman: explain
+    stickman_speech: "デフォルト引数 `rf=0.0` で「省略可能」にできるよ。"
+
+  - kind: sample
+    title: "lambda で 1 行関数"
+    markdown: |
+      `lambda 引数: 式` の形で、無名関数を作れます。
+      `sorted` の `key` や `pandas.apply` でよく使います。
+    sample_code: |
+      square = lambda x: x ** 2
+      print(square(5))
+
+      funds = [("A", 0.012), ("B", 0.008), ("C", 0.020)]
+      funds.sort(key=lambda f: f[1])  # 経費率で昇順
+      print(funds)
+    runnable: true
+    stickman: explain
+    stickman_speech: "lambda は短い処理を書きたい一発勝負のときに便利。"
+
+  - kind: exercise
+    title: "ボラティリティを年率換算する関数"
+    prompt: |
+      **デフォルト引数** は「省略可能な引数」を作る機能。`def f(x, y=10)` の `y=10` の部分。呼び出し側は `f(5)` でも `f(5, 20)` でも OK。
+
+      ```python
+      f(5)        # x=5, y=10
+      f(5, 20)    # x=5, y=20
+      f(5, y=30)  # キーワード指定
+      ```
+
+      ボラティリティの年率化は `√n` 倍が定石（独立同分布の仮定下、ルート T 則）。営業日は **米国 252、東京 245** など市場で違うので、引数で渡せるようにしておくと再利用性が高まります。
+    code_template: |
+      def annualize_vol(daily_vol, days_per_year={{slot:default}}):
+          return daily_vol * (days_per_year {{slot:expr}})
+
+      print(round(annualize_vol(0.01), 4))
+      print(round(annualize_vol(0.01, 252*2), 4))
+    blanks:
+      - id: default
+        placeholder: "デフォルト値"
+        width: 8
+        accept_patterns:
+          - '^252$'
+        canonical_answer: "252"
+        hint: "米国の年間営業日"
+      - id: expr
+        placeholder: "演算子と数"
+        width: 12
+        accept_patterns:
+          - '^\*\*\s*0\.5$'
+          - '^\*\*\s*\(1\s*/\s*2\)$'
+        canonical_answer: "** 0.5"
+        hint: "平方根は ** 0.5"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '0\.1587'
+      - kind: stdout_regex
+        pattern: '0\.2245'
+    hints:
+      - "デフォルト引数は `=` の右に書く。"
+      - "ボラの年率化は `√n` 倍 = `n ** 0.5`。"
+    stickman_feedback:
+      correct: "金融計算を関数にまとめると一気に再利用しやすくなるよ！"
+      wrong_hint1: "デフォルトは 252、演算子は `** 0.5`。"
+      wrong_hint2: "答えは `252` と `** 0.5`。"
+      wrong_hint3: "答えは `252` と `** 0.5`。"
+
+  - kind: exercise
+    title: "lambda で 2 倍する関数"
+    prompt: |
+      `lambda` は **無名関数（anonymous function）** とも呼ばれ、その場限りの 1 行関数を作るのに使います。
+
+      `def` との違いは:
+      - `def` は名前付き、複数行 OK
+      - `lambda` は 1 つの式のみ、名前を後付けで割り当てる
+
+      実用例:
+      ```python
+      sorted(data, key=lambda x: x[1])   # 2 番目の要素でソート
+      df["col"].apply(lambda x: x * 2)   # pandas で各要素に 2 倍
+      ```
+
+      簡単な変換に使うのが王道。複雑な処理は `def` の方が読みやすいです。
+    code_template: |
+      double = lambda {{slot:arg}}: {{slot:body}}
+      print(double(7))
+    blanks:
+      - id: arg
+        placeholder: "引数名"
+        width: 6
+        accept_patterns:
+          - '^[A-Za-z_]\w*$'
+        canonical_answer: "x"
+        hint: "好きな名前で OK"
+      - id: body
+        placeholder: "計算式"
+        width: 10
+        accept_patterns:
+          - '^[A-Za-z_]\w*\s*\*\s*2$'
+          - '^2\s*\*\s*[A-Za-z_]\w*$'
+        canonical_answer: "x * 2"
+        hint: "引数を 2 倍する式"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^14\s*$'
+    hints:
+      - "`lambda 引数: 式` の形だよ。"
+      - "`x` と `x * 2` を入れてね。"
+    stickman_feedback:
+      correct: "lambda、慣れると一行で何でも書けるよ！"
+      wrong_hint1: "引数名と、それを 2 倍する式を入れよう。"
+      wrong_hint2: "`x` と `x * 2` だね。"
+      wrong_hint3: "答えは `x` と `x * 2`。"

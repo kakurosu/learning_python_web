@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.venv/
+.uv/
+dist/
+build/
+*.egg-info/
+
+# Local DB
+progress.db
+*.db
+
+# Logs
+logs/
+
+# Env
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

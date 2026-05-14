@@ -1,0 +1,241 @@
+id: phase_c_test
+title: "Phase C 実力テスト"
+description: "金融計算（章 15-19）の実力テスト。10 問・制限時間 30 分・合格基準 60%。CMA 試験対策にも有効。"
+phase: C
+time_limit_minutes: 30
+pass_score: 0.6
+
+questions:
+  # Q1 — 期待値
+  - kind: exercise
+    title: "Q1. 年率期待リターン"
+    prompt: "日次リターン `r` の平均を年率に換算してください（営業日 252）。"
+    code_template: |
+      import numpy as np
+      r = np.array([0.001, -0.002, 0.003, -0.001, 0.002, 0.0, 0.001])
+      ann = {{slot:expr}}
+      print(round(float(ann), 4))
+    blanks:
+      - id: expr
+        canonical_answer: "r.mean() * 252"
+        accept_patterns:
+          - '^r\.mean\(\)\s*\*\s*252$'
+          - '^252\s*\*\s*r\.mean\(\)$'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.144\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`r.mean() * 252`"
+      wrong_hint2: "`r.mean() * 252`"
+      wrong_hint3: "`r.mean() * 252`"
+
+  # Q2 — 年率ボラ
+  - kind: exercise
+    title: "Q2. 年率ボラティリティ"
+    prompt: "不偏標準偏差を `√252` 倍して年率ボラを計算してください。"
+    code_template: |
+      import numpy as np
+      r = np.array([0.001, -0.002, 0.003, -0.001, 0.002, 0.0, 0.001])
+      vol = r.std(ddof=1) * np.{{slot:fn}}(252)
+      print(round(float(vol), 4))
+    blanks:
+      - id: fn
+        canonical_answer: "sqrt"
+        accept_patterns: ['^sqrt$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0273\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`sqrt`"
+      wrong_hint2: "`sqrt`"
+      wrong_hint3: "`sqrt`"
+
+  # Q3 — Cov
+  - kind: exercise
+    title: "Q3. 共分散"
+    prompt: "`a, b` の共分散 (ddof=1) を計算してください。"
+    code_template: |
+      import numpy as np
+      a = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      b = np.array([0.008, -0.015, 0.004, 0.010, -0.005])
+      c = np.{{slot:fn}}(a, b, ddof=1)[0, 1]
+      print(round(float(c), 5))
+    blanks:
+      - id: fn
+        canonical_answer: "cov"
+        accept_patterns: ['^cov$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '0\.00014'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`cov`"
+      wrong_hint2: "`cov`"
+      wrong_hint3: "`cov`"
+
+  # Q4 — Correlation
+  - kind: exercise
+    title: "Q4. 相関係数"
+    prompt: "`a, b` の相関係数を計算してください。"
+    code_template: |
+      import numpy as np
+      a = np.array([0.01, -0.02, 0.005, 0.012, -0.008])
+      b = np.array([0.008, -0.015, 0.004, 0.010, -0.005])
+      c = np.{{slot:fn}}(a, b)[0, 1]
+      print(round(float(c), 4))
+    blanks:
+      - id: fn
+        canonical_answer: "corrcoef"
+        accept_patterns: ['^corrcoef$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.9993\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`corrcoef`"
+      wrong_hint2: "`corrcoef`"
+      wrong_hint3: "`corrcoef`"
+
+  # Q5 — Tracking error
+  - kind: exercise
+    title: "Q5. トラッキングエラー"
+    prompt: "アクティブリターン `rp - rb` の年率標準偏差を計算してください。"
+    code_template: |
+      import numpy as np
+      rp = np.array([0.012, -0.018, 0.005, 0.015, -0.007])
+      rb = np.array([0.010, -0.015, 0.004, 0.012, -0.005])
+      active = {{slot:diff}}
+      te = active.std(ddof=1) * np.sqrt(252)
+      print(round(float(te), 4))
+    blanks:
+      - id: diff
+        canonical_answer: "rp - rb"
+        accept_patterns: ['^rp\s*-\s*rb$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0411\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`rp - rb`"
+      wrong_hint2: "`rp - rb`"
+      wrong_hint3: "`rp - rb`"
+
+  # Q6 — Sharpe
+  - kind: exercise
+    title: "Q6. シャープレシオ"
+    prompt: "`mu - rf` を `vol` で割ってシャープレシオを計算してください。"
+    code_template: |
+      mu = 0.10; vol = 0.18; rf = 0.02
+      sr = {{slot:expr}}
+      print(round(sr, 4))
+    blanks:
+      - id: expr
+        canonical_answer: "(mu - rf) / vol"
+        accept_patterns:
+          - '^\(?\s*mu\s*-\s*rf\s*\)?\s*/\s*vol$'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.4444\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`(mu - rf) / vol`"
+      wrong_hint2: "`(mu - rf) / vol`"
+      wrong_hint3: "`(mu - rf) / vol`"
+
+  # Q7 — IR
+  - kind: exercise
+    title: "Q7. 情報比率"
+    prompt: "α と TE から情報比率を計算してください。"
+    code_template: |
+      alpha = 0.03
+      te = 0.04
+      ir = {{slot:expr}}
+      print(round(ir, 4))
+    blanks:
+      - id: expr
+        canonical_answer: "alpha / te"
+        accept_patterns: ['^alpha\s*/\s*te$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.75\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`alpha / te`"
+      wrong_hint2: "`alpha / te`"
+      wrong_hint3: "`alpha / te`"
+
+  # Q8 — Portfolio variance
+  - kind: exercise
+    title: "Q8. ポートフォリオ分散"
+    prompt: "重み `w` と共分散行列 `cov` から `wᵀ Σ w` を計算してください。"
+    code_template: |
+      import numpy as np
+      cov = np.array([[0.04, 0.0072], [0.0072, 0.0144]])
+      w = np.array([0.5, 0.5])
+      pv = {{slot:expr}}
+      print(round(float(pv), 6))
+    blanks:
+      - id: expr
+        canonical_answer: "w @ cov @ w"
+        accept_patterns: ['^w\s*@\s*cov\s*@\s*w$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0172\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`w @ cov @ w`"
+      wrong_hint2: "`w @ cov @ w`"
+      wrong_hint3: "`w @ cov @ w`"
+
+  # Q9 — GBM
+  - kind: exercise
+    title: "Q9. GBM のドリフト項"
+    prompt: "GBM `S_T = S_0 exp((μ - σ²/2)T + σ√T·Z)` のドリフト項を埋めてください。"
+    code_template: |
+      import numpy as np
+      np.random.seed(42)
+      S0, mu, sigma_v, T, n = 100, 0.05, 0.20, 1.0, 100000
+      Z = np.random.standard_normal(n)
+      ST = S0 * np.exp({{slot:drift}} + sigma_v * np.sqrt(T) * Z)
+      print(round(float(ST.mean()), 0))
+    blanks:
+      - id: drift
+        canonical_answer: "(mu - 0.5 * sigma_v**2) * T"
+        accept_patterns:
+          - '^\(mu\s*-\s*0\.5\s*\*\s*sigma_v\s*\*\*\s*2\)\s*\*\s*T$'
+          - '^\(mu\s*-\s*sigma_v\s*\*\*\s*2\s*/\s*2\)\s*\*\s*T$'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^10[5-6]\.\d\s*$'
+    stickman_feedback:
+      correct: "OK!"
+      wrong_hint1: "`(mu - 0.5 * sigma_v**2) * T`"
+      wrong_hint2: "`(mu - 0.5 * sigma_v**2) * T`"
+      wrong_hint3: "`(mu - 0.5 * sigma_v**2) * T`"
+
+  # Q10 — VaR
+  - kind: exercise
+    title: "Q10. VaR (95%)"
+    prompt: "5% 分位点で VaR を計算してください。"
+    code_template: |
+      import numpy as np
+      np.random.seed(0)
+      pnl = np.random.normal(0, 1_000_000, 10000)
+      var95 = -np.{{slot:fn}}(pnl, 5)
+      print(int(round(float(var95), -3)))
+    blanks:
+      - id: fn
+        canonical_answer: "percentile"
+        accept_patterns:
+          - '^percentile$'
+          - '^quantile$'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^16[0-9]{5}\s*$'
+    stickman_feedback:
+      correct: "完走！おつかれさま"
+      wrong_hint1: "`percentile`"
+      wrong_hint2: "`percentile`"
+      wrong_hint3: "`percentile`"

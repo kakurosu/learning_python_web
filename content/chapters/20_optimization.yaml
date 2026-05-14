@@ -1,0 +1,153 @@
+id: 20
+title: "ポートフォリオ最適化"
+phase: C
+prerequisites: [18, 19]
+learning_goals:
+  - "2 銘柄ポートフォリオの分散を計算できる"
+  - "scipy.optimize.minimize で最小分散ポートフォリオを求める"
+  - "等式制約 (重み合計 = 1) と不等式制約 (空売り禁止) を扱える"
+
+pages:
+  - kind: sample
+    title: "ポートフォリオの分散"
+    markdown: |
+      ## 2 銘柄ポートフォリオ
+      重み `w1, w2` (合計 1) のポートフォリオの分散は:
+
+      ```
+      Var(p) = w1² σ1² + w2² σ2² + 2 w1 w2 ρ σ1 σ2
+      ```
+
+      行列形式で書くと `Var(p) = wᵀ Σ w`（Σ は共分散行列）。
+    sample_code: |
+      import numpy as np
+      sigma = np.array([0.20, 0.12])
+      corr = 0.30
+      cov = np.array([
+          [sigma[0]**2,           corr*sigma[0]*sigma[1]],
+          [corr*sigma[0]*sigma[1], sigma[1]**2],
+      ])
+      w = np.array([0.5, 0.5])
+      port_var = w @ cov @ w
+      port_vol = np.sqrt(port_var)
+      print("分散:", round(port_var, 6))
+      print("ボラ:", round(port_vol, 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "@ は行列積。numpy で `wᵀΣw` を 1 行で書けるよ！"
+
+  - kind: sample
+    title: "scipy で最小分散ポートフォリオ"
+    markdown: |
+      ## scipy.optimize.minimize
+      目的関数（最小化したい関数）と制約を渡すと、最適な重みを返してくれます。
+      - **等式制約**: `{'type': 'eq', 'fun': lambda w: w.sum() - 1}` (重み合計 = 1)
+      - **境界**: `bounds=[(0, 1), (0, 1)]` (空売り禁止)
+    sample_code: |
+      import numpy as np
+      from scipy.optimize import minimize
+      cov = np.array([[0.04, 0.0072], [0.0072, 0.0144]])
+
+      def port_var(w):
+          return w @ cov @ w
+
+      cons = [{'type': 'eq', 'fun': lambda w: w.sum() - 1}]
+      bnds = [(0, 1), (0, 1)]
+      res = minimize(port_var, [0.5, 0.5], bounds=bnds, constraints=cons)
+      print("最適重み:", res.x.round(4))
+      print("最小ボラ:", round(np.sqrt(res.fun), 4))
+    runnable: true
+    stickman: explain
+    stickman_speech: "Markowitz 理論 by scipy！"
+
+  - kind: exercise
+    title: "ポートフォリオ分散を計算しよう"
+    prompt: |
+      共分散行列 `cov` と重みベクトル `w` から `Var(p) = wᵀ Σ w` を計算してください。
+      `@` 演算子で行列積を取れます。
+    code_template: |
+      import numpy as np
+      cov = np.array([[0.04, 0.0072], [0.0072, 0.0144]])
+      w = np.array([0.6, 0.4])
+      port_var = {{slot:expr}}
+      print(round(float(port_var), 6))
+    blanks:
+      - id: expr
+        canonical_answer: "w @ cov @ w"
+        accept_patterns:
+          - '^w\s*@\s*cov\s*@\s*w$'
+        hint: "wᵀ Σ w を @ で書く"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.02016\s*$'
+    hints:
+      - "行列積は `@`。"
+      - "`w @ cov @ w`"
+    stickman_feedback:
+      correct: "ポートフォリオ分散の公式、覚えたね！"
+      wrong_hint1: "`w @ cov @ w`"
+      wrong_hint2: "`w @ cov @ w`"
+      wrong_hint3: "`w @ cov @ w`"
+
+  - kind: exercise
+    title: "目的関数（最小化したい関数）を定義しよう"
+    prompt: |
+      重み `w` を受け取ってポートフォリオ分散を返す **lambda** を定義してください。
+    code_template: |
+      import numpy as np
+      cov = np.array([[0.04, 0.0072], [0.0072, 0.0144]])
+      port_var = lambda {{slot:arg}}: {{slot:body}}
+      print(round(port_var(np.array([0.5, 0.5])), 6))
+    blanks:
+      - id: arg
+        canonical_answer: "w"
+        accept_patterns: ['^[A-Za-z_]\w*$']
+        hint: "重みベクトルを表す引数名"
+      - id: body
+        canonical_answer: "w @ cov @ w"
+        accept_patterns:
+          - '^[A-Za-z_]\w*\s*@\s*cov\s*@\s*[A-Za-z_]\w*$'
+        hint: "wᵀ Σ w"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.0172\s*$'
+    hints:
+      - "lambda の引数を 1 つ。"
+      - "本体は `w @ cov @ w`。"
+    stickman_feedback:
+      correct: "scipy に渡せる目的関数のできあがり！"
+      wrong_hint1: "`w` と `w @ cov @ w`。"
+      wrong_hint2: "`w` と `w @ cov @ w`。"
+      wrong_hint3: "`w` と `w @ cov @ w`。"
+
+  - kind: exercise
+    title: "等式制約を書こう"
+    prompt: |
+      `scipy.optimize.minimize` に渡す **「重み合計 = 1」** の等式制約を完成させてください。
+    code_template: |
+      import numpy as np
+      from scipy.optimize import minimize
+      cov = np.array([[0.04, 0.0072], [0.0072, 0.0144]])
+      port_var = lambda w: w @ cov @ w
+      cons = [{'type': {{slot:type}}, 'fun': lambda w: w.sum() - 1}]
+      bnds = [(0, 1), (0, 1)]
+      res = minimize(port_var, [0.5, 0.5], bounds=bnds, constraints=cons)
+      print(res.x.round(2))
+    blanks:
+      - id: type
+        canonical_answer: "'eq'"
+        accept_patterns:
+          - "^'eq'$"
+          - '^"eq"$'
+        hint: "等式制約は 'eq'"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '\[0\.18 0\.82\]'
+    hints:
+      - "等式は 'eq'、不等式は 'ineq'。"
+      - "`'eq'`"
+    stickman_feedback:
+      correct: "Markowitz 最小分散ポートフォリオ完成！"
+      wrong_hint1: "`'eq'`"
+      wrong_hint2: "`'eq'`"
+      wrong_hint3: "`'eq'`"

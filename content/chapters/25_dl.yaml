@@ -1,0 +1,172 @@
+id: 25
+title: "ディープラーニング入門 (PyTorch)"
+phase: D
+prerequisites: [24]
+learning_goals:
+  - "PyTorch の Tensor / 自動微分の基本を理解する"
+  - "1 層 MLP を nn.Linear で組める"
+  - "forward / loss / backward / step の 1 イテレーションを書ける"
+
+pages:
+  - kind: sample
+    title: "PyTorch の Tensor"
+    markdown: |
+      ## Tensor
+      PyTorch の中心は **Tensor**（NumPy の ndarray と似た多次元配列）。
+      `requires_grad=True` で **自動微分** が有効になります。
+    sample_code: |
+      import torch
+      x = torch.tensor([1.0, 2.0, 3.0], requires_grad=True)
+      y = (x ** 2).sum()
+      y.backward()             # dy/dx = 2x
+      print(x.grad)
+    runnable: true
+    expected_output: "tensor([2., 4., 6.])"
+    stickman: explain
+    stickman_speech: "Tensor + 自動微分が PyTorch のコア。"
+
+  - kind: sample
+    title: "勾配降下を可視化する（Loss Curve）"
+    markdown: |
+      ## 勾配降下の "学習が進む" を見る
+      機械学習はループのたびに **損失（loss）が下がる** のを確認するのが基本動作。
+      下のサンプルは 100 反復の loss を `losses` リストに集めて、最後にグラフ表示します。
+
+      `forward → loss → backward → step` の 4 ステップが 1 反復。これを 100 回繰り返すと、loss が指数的に減衰して 0 に近づくのが見えます。
+    sample_code: |
+      import torch
+      import torch.nn as nn
+      import matplotlib.pyplot as plt
+
+      torch.manual_seed(0)
+      model = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
+      X = torch.randn(64, 2)
+      y = (X.sum(dim=1) > 0).float().unsqueeze(1)
+      opt = torch.optim.Adam(model.parameters(), lr=0.1)
+      loss_fn = nn.BCELoss()
+
+      losses = []
+      for step in range(100):
+          opt.zero_grad()
+          loss = loss_fn(model(X), y)
+          loss.backward()
+          opt.step()
+          losses.append(float(loss))
+
+      print(f"初期 loss: {losses[0]:.3f}  →  最終 loss: {losses[-1]:.3f}")
+
+      plt.figure(figsize=(7, 3))
+      plt.plot(losses, color="#DC2626", linewidth=2)
+      plt.title("Training Loss")
+      plt.xlabel("Iteration")
+      plt.ylabel("BCE Loss")
+      plt.grid(True, alpha=0.3)
+      plt.tight_layout()
+      plt.show()
+    runnable: true
+    stickman: explain
+    stickman_speech: "実行すると、loss が下がっていく曲線が描画されるよ。"
+
+  - kind: exercise
+    title: "Tensor の自動微分"
+    prompt: |
+      `f(x) = x^3` の x=2 における微分を PyTorch で計算してください。
+      `requires_grad=True` を有効にしてから `backward()` を呼びます。
+    code_template: |
+      import torch
+      x = torch.tensor(2.0, requires_grad={{slot:flag}})
+      y = x ** 3
+      y.{{slot:method}}()
+      print(float(x.grad))
+    blanks:
+      - id: flag
+        canonical_answer: "True"
+        accept_patterns: ['^True$']
+        hint: "微分を有効にする"
+      - id: method
+        canonical_answer: "backward"
+        accept_patterns: ['^backward$']
+        hint: "逆伝播メソッド"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^12\.0\s*$'
+    hints:
+      - "`requires_grad=True` と `backward()`。"
+      - "`True` と `backward`。"
+    stickman_feedback:
+      correct: "自動微分、これがディープラーニングの心臓。"
+      wrong_hint1: "`True` と `backward`。"
+      wrong_hint2: "`True` と `backward`。"
+      wrong_hint3: "`True` と `backward`。"
+
+  - kind: exercise
+    title: "線形層を組み立てよう"
+    prompt: |
+      入力 5 次元 → 出力 1 次元の線形層を `nn.Linear(in, out)` で作ってください。
+    code_template: |
+      import torch
+      import torch.nn as nn
+      layer = nn.{{slot:cls}}(5, 1)
+      x = torch.randn(3, 5)
+      y = layer(x)
+      print(y.shape)
+    blanks:
+      - id: cls
+        canonical_answer: "Linear"
+        accept_patterns: ['^Linear$']
+        hint: "全結合層のクラス名"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'torch\.Size\(\[3, 1\]\)'
+    hints:
+      - "`Linear`"
+      - "`Linear`"
+    stickman_feedback:
+      correct: "nn.Linear が全結合層の基本ブロック。"
+      wrong_hint1: "`Linear`"
+      wrong_hint2: "`Linear`"
+      wrong_hint3: "`Linear`"
+
+  - kind: exercise
+    title: "1 イテレーションの学習ループ"
+    prompt: |
+      forward → loss → backward → optimizer.step の **基本 4 ステップ** を完成させてください。
+    code_template: |
+      import torch
+      import torch.nn as nn
+      torch.manual_seed(0)
+      model = nn.Linear(3, 1)
+      opt = torch.optim.SGD(model.parameters(), lr=0.01)
+      loss_fn = nn.MSELoss()
+      X = torch.randn(8, 3)
+      y = torch.randn(8, 1)
+      pred = model(X)
+      loss = loss_fn({{slot:pred}}, {{slot:y}})
+      opt.zero_grad()
+      loss.{{slot:bw}}()
+      opt.{{slot:step}}()
+      print(round(float(loss), 3))
+    blanks:
+      - id: pred
+        canonical_answer: "pred"
+        accept_patterns: ['^pred$']
+      - id: y
+        canonical_answer: "y"
+        accept_patterns: ['^y$']
+      - id: bw
+        canonical_answer: "backward"
+        accept_patterns: ['^backward$']
+      - id: step
+        canonical_answer: "step"
+        accept_patterns: ['^step$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^\d+\.\d+\s*$'
+    hints:
+      - "`pred`, `y`, `backward`, `step`。"
+      - "`pred`, `y`, `backward`, `step`。"
+    stickman_feedback:
+      correct: "この 4 ステップが、実務でも研究でも変わらない基本。"
+      wrong_hint1: "`pred`, `y`, `backward`, `step`。"
+      wrong_hint2: "`pred`, `y`, `backward`, `step`。"
+      wrong_hint3: "`pred`, `y`, `backward`, `step`。"

@@ -1,0 +1,184 @@
+id: 30
+title: "Streamlit でダッシュボード"
+phase: F
+prerequisites: [13, 14]
+learning_goals:
+  - "Streamlit の基本コンポーネント (title / write / line_chart / slider) を使える"
+  - "スクリプトの再実行モデルを理解する"
+  - "Launch Streamlit ボタンから実際にブラウザでアプリを開ける"
+
+pages:
+  - kind: sample
+    title: "Streamlit とは"
+    markdown: |
+      ## Streamlit
+      `streamlit run app.py` で起動すると、**Python スクリプトを書くだけで Web ダッシュボード** が立ち上がります。
+      `st.title`, `st.write`, `st.line_chart`, `st.slider` などのコンポーネントを呼ぶだけ。
+
+      まずはコードの構造を確認してから、次のページで実際に起動してみましょう。
+    sample_code: |
+      # コンポーネント名を確認するだけ（実際の起動はしない）
+      components = ["title", "write", "line_chart", "slider", "sidebar", "metric"]
+      for c in components:
+          print(f"st.{c}")
+    runnable: true
+    stickman: explain
+    stickman_speech: "Streamlit は学習にも本番にも使える、軽量フレームワーク。"
+
+  - kind: sample
+    title: "Hello, Streamlit!（実際に起動）"
+    markdown: |
+      ## 一番シンプルなアプリ
+      下のコードはそのまま動く Streamlit アプリです。
+      **「Launch Streamlit」** ボタンを押すと、別プロセスで `streamlit run` が起動して
+      ブラウザ（既定ブラウザ）が自動で `http://localhost:8501` を開きます。
+
+      **注意**:
+      - 起動には 2〜3 秒かかります（初回は遅め）
+      - もう一度押すと前のサーバーを停止して新しいコードで再起動します
+      - ブラウザを閉じても Streamlit サーバーは生きています。停止したいときは別のサンプルで再度 Launch するか、本アプリを閉じてください
+    sample_code: |
+      import streamlit as st
+
+      st.title("Hello, Streamlit!")
+      st.write("これは Study Python Finance から起動した最初の Streamlit アプリです。")
+
+      name = st.text_input("あなたの名前", "Anonymous")
+      st.write(f"こんにちは、**{name}** さん！")
+
+      number = st.slider("好きな数字を選んでね", 0, 100, 42)
+      st.metric("選んだ数字", number)
+    runnable: true
+    runner: streamlit
+    stickman: explain
+    stickman_speech: "Launch Streamlit を押して、ブラウザに切り替えて触ってみよう。"
+
+  - kind: sample
+    title: "金融ダッシュボード（実際に起動）"
+    markdown: |
+      ## 株価ダッシュボード
+      ランダム生成した時系列で、**折れ線チャート + メトリクス + サイドバー** を実装した例です。
+      「Launch Streamlit」を押して、サイドバーのスライダーで期間を変えてみましょう。
+
+      Streamlit の特徴: **コードを 1 つでも変えると自動的に画面が再実行されます**（hot reload）。
+    sample_code: |
+      import numpy as np
+      import pandas as pd
+      import streamlit as st
+
+      st.title("📈 株価ダッシュボード（デモ）")
+
+      # サイドバーで操作 UI
+      with st.sidebar:
+          st.header("設定")
+          n_days = st.slider("期間 (日)", 30, 365, 180)
+          tickers = st.multiselect(
+              "銘柄", ["AAA", "BBB", "CCC"], default=["AAA", "BBB"]
+          )
+          seed = st.number_input("乱数シード", value=0)
+
+      # データ生成（実際のアプリでは API や CSV から読込）
+      rng = np.random.default_rng(int(seed))
+      dates = pd.date_range(end=pd.Timestamp.today(), periods=n_days)
+      data = {}
+      for t in tickers:
+          ret = rng.normal(0.001, 0.02, size=n_days)
+          data[t] = 100 * np.exp(np.cumsum(ret))
+      df = pd.DataFrame(data, index=dates)
+
+      # メイン領域に折れ線チャート + メトリクス
+      st.line_chart(df)
+
+      cols = st.columns(max(len(tickers), 1))
+      for col, t in zip(cols, tickers):
+          last = df[t].iloc[-1]
+          change = (last / df[t].iloc[0] - 1) * 100
+          col.metric(t, f"{last:.2f}", f"{change:+.2f} %")
+
+      with st.expander("生データを見る"):
+          st.dataframe(df.tail(20))
+    runnable: true
+    runner: streamlit
+    stickman: explain
+    stickman_speech: "サイドバーで設定 → 即座にチャート更新。これが Streamlit の真骨頂。"
+
+  - kind: exercise
+    title: "Streamlit のタイトルを書こう"
+    prompt: |
+      `st.title(...)` を呼ぶコードを文字列として作ります。
+      タイトルとして使う文字列を `title_text` に入れてください。
+    code_template: |
+      title_text = {{slot:arg}}
+      print("st.title(" + repr(title_text) + ")")
+    blanks:
+      - id: arg
+        canonical_answer: '"株価ダッシュボード"'
+        accept_patterns:
+          - '^"株価ダッシュボード"$'
+          - "^'株価ダッシュボード'$"
+        hint: "文字列をクォートで囲む"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'st\.title\(.株価ダッシュボード.\)'
+    hints:
+      - 'クォートで囲む。`"株価ダッシュボード"`'
+      - '`"株価ダッシュボード"`'
+    stickman_feedback:
+      correct: "title はダッシュボードの顔。"
+      wrong_hint1: '`"株価ダッシュボード"`'
+      wrong_hint2: '`"株価ダッシュボード"`'
+      wrong_hint3: '`"株価ダッシュボード"`'
+
+  - kind: exercise
+    title: "selectbox を組み立てよう"
+    prompt: |
+      `st.selectbox(ラベル, 選択肢のリスト)` の **選択肢** を埋めてください。
+    code_template: |
+      options = {{slot:options}}
+      print("st.selectbox('銘柄', " + repr(options) + ")")
+    blanks:
+      - id: options
+        canonical_answer: '["AAA", "BBB"]'
+        accept_patterns:
+          - '^\[\s*"AAA"\s*,\s*"BBB"\s*\]$'
+          - "^\\[\\s*'AAA'\\s*,\\s*'BBB'\\s*\\]$"
+        hint: "Python のリスト"
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'st\.selectbox.*AAA.*BBB'
+    hints:
+      - 'リストで `["AAA", "BBB"]`。'
+      - '`["AAA", "BBB"]`'
+    stickman_feedback:
+      correct: "selectbox は最も使うインプットコンポーネント。"
+      wrong_hint1: '`["AAA", "BBB"]`'
+      wrong_hint2: '`["AAA", "BBB"]`'
+      wrong_hint3: '`["AAA", "BBB"]`'
+
+  - kind: exercise
+    title: "slider のレンジを設定しよう"
+    prompt: |
+      `st.slider(ラベル, min, max, default)` の **min, max** を整数で入れてください。
+      期間を **1 日〜30 日** で動かす想定です。
+    code_template: |
+      lo = {{slot:lo}}
+      hi = {{slot:hi}}
+      print("st.slider('期間', " + str(lo) + ", " + str(hi) + ", 7)")
+    blanks:
+      - id: lo
+        canonical_answer: "1"
+        accept_patterns: ['^1$']
+      - id: hi
+        canonical_answer: "30"
+        accept_patterns: ['^30$']
+    test_cases:
+      - kind: stdout_regex
+        pattern: 'st\.slider\([^)]*1, 30, 7\)'
+    hints:
+      - "`1` と `30`"
+      - "`1` と `30`"
+    stickman_feedback:
+      correct: "slider はインタラクティブな調整に便利。"
+      wrong_hint1: "`1` と `30`"
+      wrong_hint2: "`1` と `30`"
+      wrong_hint3: "`1` と `30`"

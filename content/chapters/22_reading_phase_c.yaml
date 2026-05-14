@@ -1,0 +1,208 @@
+id: 22
+title: "コードを読もう — Phase C 金融計算（CMA）の総復習"
+phase: C
+prerequisites: [17, 18, 19, 20, 21]
+learning_goals:
+  - "期待値・分散・共分散・シャープレシオの計算コードを読み解ける"
+  - "ポートフォリオ最適化とモンテカルロのコード構造を理解する"
+
+pages:
+  # ─── Q1: 期待値（章 15） ────────────────────────────
+  - kind: reading
+    title: "期待値の計算（章 15 復習）"
+    prompt: |
+      下のコードの `expected` の値として正しいものを選んでください。
+    code: |
+      import numpy as np
+      probs = np.array([0.3, 0.5, 0.2])
+      returns = np.array([0.10, 0.05, -0.10])
+      expected = (probs * returns).sum()
+      print(round(expected, 4))
+    code_file_label: "q01.py"
+    choices:
+      - "0.0350"
+      - "0.0500"
+      - "0.0167"
+      - "0.0100"
+    correct_index: 0
+    explanation: |
+      期待値 E[R] = Σ p_i × r_i = 0.3×0.10 + 0.5×0.05 + 0.2×(-0.10) = 0.03 + 0.025 - 0.02 = 0.035。
+
+  # ─── Q2: 分散と標準偏差（章 15） ───────────────────
+  - kind: reading
+    title: "分散と標準偏差（章 15 復習）"
+    prompt: |
+      下のコードが計算している指標は何ですか？
+    code: |
+      import numpy as np
+      returns = np.array([0.10, -0.05, 0.08, 0.03, -0.02])
+      result = np.std(returns, ddof=1)
+      print(result)
+    code_file_label: "q02.py"
+    choices:
+      - "リターンの算術平均"
+      - "リターンの母標準偏差（n で割る）"
+      - "リターンの不偏標準偏差（n-1 で割る）"
+      - "リターンの最大値"
+    correct_index: 2
+    explanation: |
+      `np.std(..., ddof=1)` は自由度 (n-1) で割る **不偏標準偏差**。サンプル分散の平方根に相当し、統計分析でよく使われます。`ddof=0`（デフォルト）は母標準偏差です。
+
+  # ─── Q3: 共分散（章 16） ────────────────────────────
+  - kind: reading
+    title: "共分散行列の対角成分（章 16 復習）"
+    prompt: |
+      下のコードの `cov[0, 0]` の意味として正しいものを選んでください。
+    code: |
+      import numpy as np
+      cov = np.cov(returns_a, returns_b, ddof=1)
+      print(cov[0, 0])
+    code_file_label: "q03.py"
+    choices:
+      - "ファンド A とファンド B の共分散"
+      - "ファンド A 自身の分散（不偏）"
+      - "ファンド B 自身の分散（不偏）"
+      - "ファンド A と B の相関係数"
+    correct_index: 1
+    explanation: |
+      `np.cov` は 2×2 の共分散行列を返します。対角成分 `cov[0,0]` は **1 番目の系列（A）の分散**、`cov[1,1]` は B の分散、`cov[0,1] = cov[1,0]` が A と B の共分散です。
+
+  # ─── Q4: 相関係数（章 16） ──────────────────────────
+  - kind: reading
+    title: "相関係数の計算（章 16 復習）"
+    prompt: |
+      下のコードについて、`corr` が取り得る値の範囲として正しいものを選んでください。
+    code: |
+      import numpy as np
+      cov = np.cov(a, b, ddof=1)
+      corr = cov[0, 1] / (np.std(a, ddof=1) * np.std(b, ddof=1))
+    code_file_label: "q04.py"
+    choices:
+      - "0 〜 1 の範囲"
+      - "-1 〜 1 の範囲"
+      - "0 以上の任意の値"
+      - "任意の実数"
+    correct_index: 1
+    explanation: |
+      相関係数 = 共分散 / (σ_a × σ_b) は定義により **-1 〜 +1** の範囲。+1 は完全正の相関、-1 は完全負の相関、0 は無相関を意味します。
+
+  # ─── Q5: シャープレシオ（章 17） ────────────────────
+  - kind: reading
+    title: "シャープレシオの式（章 17 復習）"
+    prompt: |
+      下のコードは何の指標を計算しているか選んでください。
+    code: |
+      import numpy as np
+      excess = returns - risk_free
+      ratio = excess.mean() / excess.std(ddof=1)
+      annualized = ratio * np.sqrt(12)
+      print(annualized)
+    code_file_label: "q05.py"
+    choices:
+      - "年率化したシャープレシオ"
+      - "年率化したインフォメーションレシオ"
+      - "年率化したトラッキングエラー"
+      - "ベンチマーク調整リターン"
+    correct_index: 0
+    explanation: |
+      `(Rp - Rf) / σ_p` を月次で計算し、`√12` を掛けて年率化しているのは **シャープレシオ**。IR はベンチマーク超過リターンを TE で割ったもの、TE は超過リターンの標準偏差そのものです。
+
+  # ─── Q6: インフォメーションレシオ（章 17） ──────────
+  - kind: reading
+    title: "IR の定義（章 17 復習）"
+    prompt: |
+      下のコードの `ir` が表す指標として正しいものを選んでください。
+    code: |
+      active = fund_returns - bench_returns
+      ir = active.mean() / active.std(ddof=1)
+    code_file_label: "q06.py"
+    choices:
+      - "シャープレシオ"
+      - "インフォメーションレシオ"
+      - "ソルティーノレシオ"
+      - "アルファ"
+    correct_index: 1
+    explanation: |
+      ベンチマーク超過リターン（active return）の平均をその標準偏差（トラッキングエラー）で割ったものが **インフォメーションレシオ**。マネージャーのスキル指標です。
+
+  # ─── Q7: ポートフォリオ最適化（章 18） ──────────────
+  - kind: reading
+    title: "等加重ポートフォリオ（章 18 復習）"
+    prompt: |
+      下のコードが構築しているポートフォリオの重み配分として正しいものを選んでください。
+    code: |
+      import numpy as np
+      n = 4
+      w = np.ones(n) / n
+      print(w)
+    code_file_label: "q07.py"
+    choices:
+      - "[1, 1, 1, 1]"
+      - "[0.25, 0.25, 0.25, 0.25]"
+      - "[1.0, 0.5, 0.25, 0.125]"
+      - "[4, 4, 4, 4]"
+    correct_index: 1
+    explanation: |
+      `np.ones(4)` は `[1, 1, 1, 1]`、それを 4 で割って `[0.25, 0.25, 0.25, 0.25]`。これは **等加重ポートフォリオ**（equal-weight）の典型実装です。
+
+  # ─── Q8: 最小分散の目的関数（章 18） ────────────────
+  - kind: reading
+    title: "ポートフォリオ分散の計算（章 18 復習）"
+    prompt: |
+      下のコードが計算しているのは何ですか？
+    code: |
+      import numpy as np
+      port_var = w @ cov @ w
+    code_file_label: "q08.py"
+    choices:
+      - "ポートフォリオの期待リターン"
+      - "ポートフォリオの分散（σ_p²）"
+      - "ポートフォリオの標準偏差（σ_p）"
+      - "ポートフォリオのシャープレシオ"
+    correct_index: 1
+    explanation: |
+      `w @ Σ @ w` はベクトル w と共分散行列 Σ の二次形式で、ポートフォリオの **分散 σ_p²** を与える式です。標準偏差を得るには `np.sqrt(w @ cov @ w)`。
+
+  # ─── Q9: モンテカルロ（章 19） ──────────────────────
+  - kind: reading
+    title: "モンテカルロ・シミュレーション（章 19 復習）"
+    prompt: |
+      下のコードは何を計算しているか選んでください。
+    code: |
+      import numpy as np
+      rng = np.random.default_rng(0)
+      paths = rng.normal(0.0, 0.01, size=(1000, 252))
+      terminal = (1 + paths).prod(axis=1)
+      print(terminal.mean())
+    code_file_label: "q09.py"
+    choices:
+      - "1000 銘柄の同時最適化"
+      - "1000 本の 252 日リターン経路を生成し、各経路の累積リターンの平均を出す"
+      - "リターンの自己相関係数"
+      - "VaR（バリュー・アット・リスク）"
+    correct_index: 1
+    explanation: |
+      正規乱数を 1000×252 個生成 → 各経路で `(1+r)` を順次掛けて 252 日後の累積リターンを得る → その平均。**モンテカルロ法** による期待ターミナル価値の推定です。
+
+  # ─── Q10: GBM のサンプル（章 19） ──────────────────
+  - kind: reading
+    title: "GBM の対数収益（章 19 復習）"
+    prompt: |
+      下のコードの `S` が表すものとして最も適切なのは？
+    code: |
+      import numpy as np
+      n = 252
+      mu, sigma = 0.05, 0.20
+      dt = 1 / n
+      z = np.random.default_rng(0).standard_normal(n)
+      log_ret = (mu - 0.5 * sigma ** 2) * dt + sigma * np.sqrt(dt) * z
+      S = 100 * np.exp(log_ret.cumsum())
+    code_file_label: "q10.py"
+    choices:
+      - "幾何ブラウン運動による 1 本の株価経路"
+      - "ベンチマーク・インデックスの実データ"
+      - "VaR の信頼区間"
+      - "ポートフォリオの最適化結果"
+    correct_index: 0
+    explanation: |
+      `(μ - σ²/2)dt + σ√dt × Z` は **GBM の対数収益の離散化**。これを累積和した指数を初期株価 100 に掛けて、株価の 1 本のサンプルパスを生成しています。

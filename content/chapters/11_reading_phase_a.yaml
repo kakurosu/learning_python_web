@@ -1,0 +1,198 @@
+id: 11
+title: "コードを読もう — Phase A 文法基礎の総復習"
+phase: A
+prerequisites: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+learning_goals:
+  - "Phase A で学んだ文法（変数・演算・if・ループ・リスト・辞書・関数）を読み解ける"
+  - "コードを実行せずに、出力や挙動を頭の中で追える"
+
+pages:
+  # ─── Q1: print の出力（章 01） ──────────────────────
+  - kind: reading
+    title: "print の基本（章 01 復習）"
+    prompt: |
+      下のコードを実行すると、画面に何が表示されるでしょうか？
+    code: |
+      print("Hello, World!")
+    code_file_label: "q01.py"
+    choices:
+      - "Hello, World!"
+      - "\"Hello, World!\""
+      - "Hello,\\nWorld!"
+      - "NameError が出る"
+    correct_index: 0
+    explanation: |
+      `print()` は引数として渡した文字列を、クォートを取り除いてそのまま 1 行で出力します。
+
+  # ─── Q2: 変数と型（章 02） ──────────────────────────
+  - kind: reading
+    title: "変数の型は何？（章 02 復習）"
+    prompt: |
+      下のコードを実行したとき、`type(x)` の結果として正しいものを選んでください。
+    code: |
+      x = 3.14
+      print(type(x))
+    code_file_label: "q02.py"
+    choices:
+      - "<class 'int'>"
+      - "<class 'float'>"
+      - "<class 'str'>"
+      - "<class 'decimal.Decimal'>"
+    correct_index: 1
+    explanation: |
+      `3.14` のように小数点を含むリテラルは Python では `float` 型になります。整数なら `int`、`"3.14"` のようにクォートで囲めば `str` です。
+
+  # ─── Q3: 演算（章 03） ──────────────────────────────
+  - kind: reading
+    title: "整数除算と剰余（章 03 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      a = 17
+      b = 5
+      print(a // b, a % b)
+    code_file_label: "q03.py"
+    choices:
+      - "3 2"
+      - "3.4 2"
+      - "2 3"
+      - "3 0"
+    correct_index: 0
+    explanation: |
+      `//` は整数除算（小数点以下切り捨て）で 17 // 5 = 3、`%` は剰余で 17 % 5 = 2。`print(x, y)` はスペース区切りで並べて表示します。
+
+  # ─── Q4: コメント（章 04） ──────────────────────────
+  - kind: reading
+    title: "コメントの扱い（章 04 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      # print("A")
+      print("B")  # print("C")
+      print("D")
+    code_file_label: "q04.py"
+    choices:
+      - "A\nB\nC\nD"
+      - "B\nD"
+      - "B\nC\nD"
+      - "A\nB\nD"
+    correct_index: 1
+    explanation: |
+      `#` から行末まではコメントとして無視されます。1 行目の `print("A")` も、2 行目末尾の `print("C")` も実行されません。
+
+  # ─── Q5: 組み込み関数（章 05） ──────────────────────
+  - kind: reading
+    title: "len と sum の組み合わせ（章 05 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      nums = [10, 20, 30, 40]
+      print(sum(nums) / len(nums))
+    code_file_label: "q05.py"
+    choices:
+      - "100"
+      - "25.0"
+      - "4"
+      - "10"
+    correct_index: 1
+    explanation: |
+      `sum([10,20,30,40]) = 100`、`len(...) = 4` で、Python 3 の `/` は浮動小数除算なので `100 / 4 = 25.0`。これは平均値を計算する典型パターンです。
+
+  # ─── Q6: if 文（章 06） ─────────────────────────────
+  - kind: reading
+    title: "elif の分岐（章 06 復習）"
+    prompt: |
+      下のコードを実行したとき、画面に表示される文字列を選んでください。
+    code: |
+      score = 72
+      if score >= 80:
+          print("A")
+      elif score >= 60:
+          print("B")
+      elif score >= 40:
+          print("C")
+      else:
+          print("D")
+    code_file_label: "q06.py"
+    choices:
+      - "A"
+      - "B"
+      - "C"
+      - "B\nC"
+    correct_index: 1
+    explanation: |
+      `if / elif` は **最初に True になった枝だけ** 実行されます。`score = 72` は `>= 80` を満たさず、次の `>= 60` で True になるので `B` のみ表示されます。
+
+  # ─── Q7: ループ（章 07） ────────────────────────────
+  - kind: reading
+    title: "range の挙動（章 07 復習）"
+    prompt: |
+      下のコードを実行すると、画面に何回 `*` が表示されるでしょうか？
+    code: |
+      for i in range(2, 8, 2):
+          print("*")
+    code_file_label: "q07.py"
+    choices:
+      - "2 回"
+      - "3 回"
+      - "4 回"
+      - "6 回"
+    correct_index: 1
+    explanation: |
+      `range(2, 8, 2)` は `2, 4, 6` の 3 要素を返します（8 は含まれない、ステップ 2）。ループは 3 回回るので `*` は 3 回出力されます。
+
+  # ─── Q8: リスト（章 08） ────────────────────────────
+  - kind: reading
+    title: "リストのスライス（章 08 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      prices = [100, 200, 300, 400, 500]
+      print(prices[1:4])
+    code_file_label: "q08.py"
+    choices:
+      - "[200, 300, 400]"
+      - "[100, 200, 300, 400]"
+      - "[200, 300, 400, 500]"
+      - "[100, 200, 300]"
+    correct_index: 0
+    explanation: |
+      スライス `[start:stop]` は **start を含み stop を含まない** 半開区間。`prices[1:4]` は index 1, 2, 3 の 3 要素、つまり `[200, 300, 400]` です。
+
+  # ─── Q9: 辞書（章 09） ──────────────────────────────
+  - kind: reading
+    title: "辞書のキーアクセス（章 09 復習）"
+    prompt: |
+      下のコードを実行したとき、何が起きるか正しいものを選んでください。
+    code: |
+      fund = {"name": "ABC Equity", "AUM": 1200}
+      print(fund.get("expense_ratio", 0.0))
+    code_file_label: "q09.py"
+    choices:
+      - "KeyError で例外が出る"
+      - "None が表示される"
+      - "0.0 が表示される"
+      - "ABC Equity が表示される"
+    correct_index: 2
+    explanation: |
+      `dict.get(key, default)` はキーが存在しないときに `default` を返すので、`expense_ratio` が無くても `0.0` が返ります。`fund["expense_ratio"]` で角括弧アクセスすると `KeyError` になります。
+
+  # ─── Q10: 関数定義（章 10） ─────────────────────────
+  - kind: reading
+    title: "関数の戻り値（章 10 復習）"
+    prompt: |
+      下のコードの出力として正しいものを選んでください。
+    code: |
+      def discount(price, rate=0.1):
+          return price * (1 - rate)
+
+      print(discount(1000))
+    code_file_label: "q10.py"
+    choices:
+      - "900.0"
+      - "1000"
+      - "100.0"
+      - "TypeError が出る"
+    correct_index: 0
+    explanation: |
+      `rate` はデフォルト引数 0.1。`discount(1000)` は `1000 * (1 - 0.1) = 900.0`。`*` の片方が float なので結果も float になります。

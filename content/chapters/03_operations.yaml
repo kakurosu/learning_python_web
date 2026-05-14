@@ -1,0 +1,108 @@
+id: 3
+title: "演算と代入"
+phase: A
+prerequisites: [2]
+learning_goals:
+  - "四則演算 (+ - * /)、整数除算 (//)、剰余 (%)、べき乗 (**) を使える"
+  - "複合代入演算子 (+=, -=, *=, /=) を使える"
+
+pages:
+  - kind: sample
+    title: "演算子いろいろ"
+    markdown: |
+      ## 数値演算
+      Python の数値演算は普通の数学とほぼ同じです。
+      | 記号 | 意味 |
+      |------|------|
+      | `+` `-` `*` `/` | 加減乗除 |
+      | `//` | 整数除算（小数を切り捨て） |
+      | `%` | 剰余（余り） |
+      | `**` | べき乗 |
+    sample_code: |
+      print(7 + 3)
+      print(7 / 2)
+      print(7 // 2)
+      print(7 % 2)
+      print(2 ** 10)
+    runnable: true
+    expected_output: "10\n3.5\n3\n1\n1024"
+    stickman: explain
+    stickman_speech: "// と % は意外と便利だよ。"
+
+  - kind: exercise
+    title: "売上の年率成長率を計算しよう"
+    prompt: |
+      **CAGR（年平均成長率）** は `(終値/始値)^(1/n) - 1` で計算します（n は年数）。
+      2 年で 100 → 121 になった場合、`(121/100)^(1/2) - 1 = 0.10` で **年率 10%**。
+
+      Python では **べき乗** に `**` を使い、平方根は `** 0.5` と書けます（`** (1/2)` でも OK）。
+
+      下の式の空欄を埋めて、年率成長率（小数 4 桁丸め）を表示しよう。CMA 試験の「複利平均」分野でも頻出の式です。
+    code_template: |
+      start = 100
+      end = 121
+      growth_rate = (end / start) {{slot:expr}} - 1
+      print(round(growth_rate, 4))
+    blanks:
+      - id: expr
+        placeholder: "演算子と数"
+        width: 12
+        accept_patterns:
+          - '^\*\*\s*0\.5$'
+          - '^\*\*\s*\(1\s*/\s*2\)$'
+        canonical_answer: "** 0.5"
+        hint: "平方根は ** 0.5"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^0\.1\s*$'
+    hints:
+      - "平方根は 0.5 乗と同じ。`** 0.5` を使うよ。"
+      - "`** 0.5` を入れてみて。"
+    stickman_feedback:
+      correct: "金融では √ がよく出てくるよ！"
+      wrong_hint1: "べき乗演算子は ** だよ。"
+      wrong_hint2: "0.5 乗が平方根だね。"
+      wrong_hint3: "`** 0.5` を入れてね。"
+
+  - kind: exercise
+    title: "複合代入で集計しよう"
+    prompt: |
+      **複合代入演算子** は `a = a + b` を `a += b` と短く書ける記法です。`-=` `*=` `/=` も同様。
+
+      ```python
+      total = 0
+      total = total + 100   # 普通の書き方
+      total += 100          # 複合代入（同じ意味）
+      ```
+
+      ループ内の **アキュムレータ** （累積変数）でほぼ必ず使う書き方なので、今のうちに覚えておきましょう。
+
+      下のループを完成させて `sales` の合計（750）を表示しよう。
+    code_template: |
+      sales = [100, 200, 150, 300]
+      total = 0
+      for s in sales:
+          total {{slot:op}} s
+      print(total)
+    blanks:
+      - id: op
+        placeholder: "演算子"
+        width: 8
+        accept_patterns:
+          - '^\+=$'
+        canonical_answer: "+="
+        hint: "「現在の値に右辺を足す」 += を使う"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^750\s*$'
+      - kind: namespace_check
+        asserts:
+          - "total == 750"
+    hints:
+      - "`a += b` は `a = a + b` と同じ意味だよ。"
+      - "`+=` を入れてみて。"
+    stickman_feedback:
+      correct: "複合代入はコードがすっきりするね！"
+      wrong_hint1: "「足してから代入」する演算子だよ。"
+      wrong_hint2: "`+=` だね。"
+      wrong_hint3: "答えは `+=`。"

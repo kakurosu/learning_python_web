@@ -1,0 +1,164 @@
+id: 2
+title: "変数と型"
+phase: A
+prerequisites: [1]
+learning_goals:
+  - "変数に値を代入してあとで使えることを理解する"
+  - "int / float / str / bool の 4 つの基本型を区別できる"
+  - "型変換 (int(), float(), str()) を使える"
+
+pages:
+  - kind: sample
+    title: "変数って何？"
+    markdown: |
+      ## 変数 = 値に名前を付けたもの
+      数字や文字列をそのまま書くと、後から使い回せません。
+      `名前 = 値` という書き方で **変数** に値を入れておくと、その名前で何度も呼び出せます。
+    sample_code: |
+      price = 1500
+      tax_rate = 0.10
+      total = price * (1 + tax_rate)
+      print(total)
+    runnable: true
+    expected_output: "1650.0"
+    stickman: explain
+    stickman_speech: "= は「右の値を左の名前に入れる」という意味だよ。"
+
+  - kind: exercise
+    title: "変数に値を入れよう"
+    prompt: |
+      **変数** は「値に名前を付けた箱」です。`name = "Alice"` と書くと、その後 `name` と書くだけで `"Alice"` の値が取り出せます。
+
+      Python の変数は **型を明示しなくてよい** のが特徴です。文字列は `int` でないので、`name = "Alice"` は `name` を文字列型にします。`age = 25` は数値型に。
+
+      文字列にはクォートが必要、数値には不要 — この区別が最初のつまずきポイントです。
+    code_template: |
+      name = {{slot:name_val}}
+      age = {{slot:age_val}}
+      print(name, age)
+    blanks:
+      - id: name_val
+        placeholder: '"..."'
+        width: 14
+        accept_patterns:
+          - '^"Alice"$'
+          - "^'Alice'$"
+        canonical_answer: '"Alice"'
+        hint: '文字列はクォートで囲む: "Alice"'
+      - id: age_val
+        placeholder: "数値"
+        width: 6
+        accept_patterns:
+          - "^25$"
+        canonical_answer: "25"
+        hint: "クォート無しで数値を書く: 25"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^Alice 25\s*$'
+      - kind: namespace_check
+        asserts:
+          - 'name == "Alice"'
+          - "age == 25"
+    hints:
+      - "文字列にはクォートが必要、数値には不要だよ。"
+      - 'name = "Alice", age = 25'
+    stickman_feedback:
+      correct: "代入の感覚をつかめたね！"
+      wrong_hint1: "文字列はクォートで囲もう。"
+      wrong_hint2: "数値はクォート無しだよ。"
+      wrong_hint3: '"Alice" と 25 を入れてね。'
+
+  - kind: sample
+    title: "型を調べる"
+    markdown: |
+      ## 4 つの基本型
+      Python の値には **型 (type)** があります。
+      - `int`: 整数（例: 1, -5）
+      - `float`: 小数（例: 1.5, -0.01）
+      - `str`: 文字列（例: "hello"）
+      - `bool`: 真偽値（True / False）
+
+      `type()` で値や変数の型を調べられます。
+    sample_code: |
+      print(type(10))
+      print(type(3.14))
+      print(type("hi"))
+      print(type(True))
+    runnable: true
+    expected_output: "<class 'int'>\n<class 'float'>\n<class 'str'>\n<class 'bool'>"
+    stickman: explain
+    stickman_speech: "型を意識すると、エラーがぐっと減るよ。"
+
+  - kind: exercise
+    title: "文字列を数値に変換しよう"
+    prompt: |
+      CSV や Web から読み込んだ数字は **多くの場合「文字列型」** です。`"42"` のように見た目は数字でも内部は `str`。これを掛け算しようとすると `"42" * 2` は `"4242"` になってしまいます（文字列が 2 回繰り返される）。
+
+      数値演算したいときは `int(s)` で整数に、`float(s)` で小数に **明示変換** します。これを **キャスト** と呼びます。
+
+      下の `s` を `int()` で整数化して、2 倍した結果（84）を表示しよう。
+    code_template: |
+      s = "42"
+      n = {{slot:conv}}
+      print(n * 2)
+    blanks:
+      - id: conv
+        placeholder: "変換式"
+        width: 14
+        accept_patterns:
+          - '^int\(s\)$'
+        canonical_answer: "int(s)"
+        hint: "文字列→整数は int(...) を使う"
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^84\s*$'
+      - kind: namespace_check
+        asserts:
+          - "n == 42"
+    hints:
+      - "`int(文字列)` で整数に変換できるよ。"
+      - "`int(s)` を入れてみて。"
+    stickman_feedback:
+      correct: "型変換は実務でもよく使うよ！"
+      wrong_hint1: "`int()` 関数を使おう。"
+      wrong_hint2: "`int(s)` だね。"
+      wrong_hint3: "答えは `int(s)` だよ。"
+
+  - kind: exercise
+    title: "f-string で文字列を組み立てよう"
+    prompt: |
+      **f-string**（フォーマット済み文字列リテラル）は Python 3.6 以降の機能で、文字列の中に変数の値を **埋め込み** ます。
+      クォートの前に `f` を付けて、`{変数名}` で値を挿入します。
+
+      ```python
+      name = "Alice"
+      f"Hello, {name}"   # → "Hello, Alice"
+      ```
+
+      数値の整形（小数点桁数など）も `{x:.4f}` のように書けて非常に強力。実務では `print(f"{ticker}: {price:.2f}")` のように使います。
+
+      下の `msg` の中身を埋めて `Alice (25)` と表示しよう。
+    code_template: |
+      name = "Alice"
+      age = 25
+      msg = f"{{slot:body}}"
+      print(msg)
+    blanks:
+      - id: body
+        placeholder: "文字列内容"
+        width: 22
+        accept_patterns:
+          - '^\{name\} \(\{age\}\)$'
+        canonical_answer: "{name} ({age})"
+        hint: '{name} ({age}) のように書く'
+    test_cases:
+      - kind: stdout_regex
+        pattern: '^Alice \(25\)\s*$'
+    hints:
+      - "f-string では `{変数名}` の形で値を埋め込むよ。"
+      - "`{name} ({age})` を入れてみよう。"
+    stickman_feedback:
+      correct: "f-string、便利でしょ？"
+      wrong_hint1: "`{変数}` の形で埋め込むよ。"
+      wrong_hint2: "`{name} ({age})` だね。"
+      wrong_hint3: "答えは `{name} ({age})`。"
